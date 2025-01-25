@@ -6,8 +6,8 @@ import TabNav from "./src/navigation/TabNavigation/TabNav";
 export default function App() {
   return (
     <NavigationContainer>
+      <StatusBar style="light" backgroundColor="#ffff" />
       <TabNav />
-      <StatusBar style="auto" />
     </NavigationContainer>
   );
 }
