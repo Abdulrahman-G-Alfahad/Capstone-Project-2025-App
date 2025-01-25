@@ -4,9 +4,9 @@ import { StyleSheet, View } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
 // Import screens
-import Dashboard from "../../screens/Home/Dashboard";
 import NFC from "../../screens/Home/NFC";
 import Profile from "../../screens/Auth/Profile";
+import HomeStack from "../StackNavigation/HomeStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -15,7 +15,7 @@ const TabNav = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarActiveTintColor: "#FF4F6D",
-        tabBarInactiveTintColor: "#8B8EBE", //change from this to#48497F 
+        tabBarInactiveTintColor: "#8B8EBE",
         tabBarStyle: styles.tabBar,
         headerShown: false,
         tabBarLabelStyle: styles.tabLabel,
@@ -40,7 +40,7 @@ const TabNav = () => {
         },
       })}
     >
-      <Tab.Screen name="Home" component={Dashboard} />
+      <Tab.Screen name="Home" component={HomeStack} />
       <Tab.Screen name="NFC" component={NFC} />
       <Tab.Screen name="Profile" component={Profile} />
     </Tab.Navigator>

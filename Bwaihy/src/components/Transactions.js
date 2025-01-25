@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 
-const Profile = () => {
+const Transactions = () => {
   const navigation = useNavigation();
 
   return (
@@ -15,11 +15,9 @@ const Profile = () => {
         >
           <Ionicons name="chevron-back-outline" size={28} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile</Text>
+        <Text style={styles.headerTitle}>Transactions</Text>
       </View>
-      <View style={styles.content}>
-        <Text style={styles.text}>Profile Screen</Text>
-      </View>
+      <View style={styles.content}>{/* Transaction list will go here */}</View>
     </View>
   );
 };
@@ -47,25 +45,15 @@ const styles = StyleSheet.create({
     padding: 8,
     zIndex: 1,
   },
-  backButtonText: {
-    fontSize: 24,
-  },
   headerTitle: {
     fontSize: 25,
     fontWeight: "bold",
-    textAlign: "center",
     color: "#fff",
   },
   content: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  text: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#fff",
+    padding: 16,
   },
 });
 
-export default Profile;
+export default Transactions;
