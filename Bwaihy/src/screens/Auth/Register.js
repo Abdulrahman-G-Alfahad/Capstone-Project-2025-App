@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { MaterialIcons as Icon } from "@expo/vector-icons";
 
 const Register = () => {
   const navigation = useNavigation();
@@ -101,6 +102,17 @@ const Register = () => {
               keyboardType="phone-pad"
             />
           </View>
+
+          <TouchableOpacity
+            style={styles.faceIdButton}
+            onPress={() => {
+              /* Face ID setup logic */
+            }}
+          >
+            <Ionicons name="scan-outline" size={24} color="#fff" />
+            {/* <Icon name="face-retouching-natural" size={24} color="#000" /> */}
+            <Text style={styles.faceIdButtonText}>Set up Face ID</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.registerButton}
@@ -204,6 +216,21 @@ const styles = StyleSheet.create({
   loginHighlight: {
     color: "#FF4F6D",
     fontWeight: "600",
+  },
+  faceIdButton: {
+    backgroundColor: "#4B4CED",
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+    marginTop: 24,
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  faceIdButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
   },
 });
 
