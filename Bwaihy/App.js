@@ -8,9 +8,9 @@ export default function App() {
   return (
     <NavigationContainer>
       <StatusBar style="light" backgroundColor="#ffff" />
-      <TabNav />
+      {/* <TabNav /> */}
       {/* <Login /> */}
-      {/* <Register /> */}
+      <Register />
     </NavigationContainer>
   
   );
