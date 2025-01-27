@@ -3,7 +3,6 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StyleSheet, View } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
-// Import screens
 import NFC from "../../screens/Home/NFC";
 import Profile from "../../screens/Auth/Profile";
 import HomeStack from "../StackNavigation/HomeStack";

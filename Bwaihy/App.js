@@ -4,13 +4,15 @@ import { NavigationContainer } from "@react-navigation/native";
 import TabNav from "./src/navigation/TabNavigation/TabNav";
 import Login from "./src/screens/Auth/Login";
 import Register from "./src/screens/Auth/Register";
+import AuthNav from "./src/navigation/AuthNavigation/AuthNav";
 export default function App() {
   return (
     <NavigationContainer>
       <StatusBar style="light" backgroundColor="#ffff" />
       {/* <TabNav /> */}
+      <AuthNav />
       {/* <Login /> */}
-      <Register />
+      {/* <Register /> */}
     </NavigationContainer>
   
   );
