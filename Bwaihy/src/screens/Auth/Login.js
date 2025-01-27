@@ -75,15 +75,12 @@ const Login = () => {
             <Text style={styles.buttonText}>Login</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.registerLink}
-            onPress={() => navigation.navigate("Register")}
-          >
-            <Text style={styles.registerText}>
-              Don't have an account?{" "}
+          <View style={styles.registerContainer}>
+            <Text style={styles.registerText}>Don't have an account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Register")}>
               <Text style={styles.registerHighlight}>Register</Text>
-            </Text>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -161,9 +158,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  registerLink: {
-    marginTop: 20,
+  registerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
+    marginTop: 20,
   },
   registerText: {
     color: "#8e8ba7",
