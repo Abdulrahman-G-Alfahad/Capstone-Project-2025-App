@@ -20,6 +20,9 @@ const getInitials = (name) => {
   return name[0].toUpperCase();
 };
 
+// Make the Avatar color different based on the Accounts privacy ? if private make it same as the current color
+// if public make it "#FF6E40", // Deep orange
+
 // "#FF4F6D", // Primary pink
 // "#5066C0", // Primary blue
 // "#7C4DFF", // Deep purple
@@ -111,12 +114,7 @@ const FamilyTies = () => {
         <LetterAvatar name={item.name} />
         <View style={styles.beneficiaryInfo}>
           <Text style={styles.beneficiaryName}>{item.name}</Text>
-          {/* <Text style={styles.beneficiaryRelationship}>
-            {item.relationship}
-          </Text> */}
         </View>
-      </View>
-      <View style={styles.actionButtons}>
         <TouchableOpacity
           style={styles.deleteButton}
           onPress={() => {
@@ -126,6 +124,8 @@ const FamilyTies = () => {
         >
           <Ionicons name="trash-outline" size={20} color="#FF4F6D" />
         </TouchableOpacity>
+      </View>
+      <View style={styles.actionButtons}>
         <TouchableOpacity
           style={styles.sendButton}
           onPress={() => {
@@ -240,30 +240,14 @@ const FamilyTies = () => {
               Enter the amount you want to send to {selectedBeneficiary?.name}
             </Text>
 
-            <View style={styles.amountContainer}>
-              <TouchableOpacity
-                style={styles.amountButton}
-                onPress={handleDecrement}
-              >
-                <Text style={styles.amountButtonText}>-</Text>
-              </TouchableOpacity>
-
-              <TextInput
-                style={styles.amountInput}
-                value={amount}
-                onChangeText={handleAmountChange}
-                keyboardType="numeric"
-                placeholder="0.0"
-                placeholderTextColor="#999"
-              />
-
-              <TouchableOpacity
-                style={styles.amountButton}
-                onPress={handleIncrement}
-              >
-                <Text style={styles.amountButtonText}>+</Text>
-              </TouchableOpacity>
-            </View>
+            <TextInput
+              style={styles.amountInput}
+              value={amount}
+              onChangeText={handleAmountChange}
+              keyboardType="numeric"
+              placeholder="0.0"
+              placeholderTextColor="#999"
+            />
 
             <TouchableOpacity
               style={[
@@ -449,9 +433,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 4,
   },
-  beneficiaryRelationship: {
-    color: "#9991b1",
-    fontSize: 14,
+  deleteButton: {
+    padding: 8,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#2a2844",
   },
   actionButtons: {
     flexDirection: "row",
@@ -460,14 +447,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#383454",
     paddingTop: 12,
-    gap: 16,
-  },
-  deleteButton: {
-    padding: 8,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#2a2844",
   },
   sendButton: {
     backgroundColor: "#FF4F6D",
@@ -513,8 +492,9 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.7)",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
+    paddingTop: "30%",
   },
   modalContent: {
     backgroundColor: "#1f1d35",
@@ -531,6 +511,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
     maxWidth: 400,
+    maxHeight: "80%",
   },
   modalTitle: {
     fontSize: 28,
@@ -598,43 +579,15 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
   },
-  amountContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 32,
-    width: "100%",
-  },
-  amountButton: {
-    width: 48,
-    height: 48,
-    backgroundColor: "#2a2844",
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  amountButtonText: {
-    fontSize: 24,
-    color: "#fff",
-    fontWeight: "bold",
-  },
   amountInput: {
-    flex: 1,
+    width: "100%",
     height: 56,
     borderWidth: 1.5,
     borderColor: "#383454",
     borderRadius: 16,
     paddingHorizontal: 20,
     fontSize: 24,
-    marginHorizontal: 12,
+    marginBottom: 32,
     color: "#fff",
     backgroundColor: "#2a2844",
     textAlign: "center",
