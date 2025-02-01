@@ -22,29 +22,25 @@ const transactionData = [
     id: "1",
     date: "2025-01-20",
     business: businesses[0],
-    amount: -25.5,
-    time: "10:30 AM",
+    amount: -15.0,
   },
   {
     id: "2",
     date: "2025-01-20",
     business: businesses[1],
-    amount: -15.75,
-    time: "2:45 PM",
+    amount: -10.75,
   },
   {
     id: "3",
     date: "2024-12-19",
     business: businesses[2],
-    amount: -45.2,
-    time: "11:15 AM",
+    amount: -45.5,
   },
   {
     id: "4",
     date: "2025-02-01",
     business: businesses[3],
-    amount: -8.99,
-    time: "4:20 PM",
+    amount: -8.75,
   },
 ];
 
@@ -129,6 +125,7 @@ const Transactions = () => {
       </View>
       <View style={styles.content}>
         <View style={styles.filterContainer}>
+          {/* Search Bar */}
           <View style={styles.searchContainer}>
             <Ionicons
               name="search"
@@ -144,6 +141,9 @@ const Transactions = () => {
               onChangeText={setSearchQuery}
             />
           </View>
+
+          {/* Date Range Filter */}
+          {/* Should it be a single date filter? */}
           <View style={styles.dateRangeContainer}>
             <View style={styles.dateRangeWrapper}>
               <View style={styles.dateSection}>
@@ -185,6 +185,8 @@ const Transactions = () => {
           </View>
         </View>
 
+        {/* Transaction List */}
+
         <ScrollView style={styles.transactionList}>
           {groupTransactionsByDate(transactionData).map(
             ([date, transactions]) => (
@@ -210,9 +212,8 @@ const Transactions = () => {
                     </View>
                     <View style={styles.transactionRight}>
                       <Text style={styles.amount}>
-                        {transaction.amount.toFixed(2)} KD
+                        {Math.abs(transaction.amount).toFixed(2)} KD
                       </Text>
-                      <Text style={styles.time}>{transaction.time}</Text>
                     </View>
                   </View>
                 ))}
@@ -493,16 +494,12 @@ const styles = StyleSheet.create({
   },
   transactionRight: {
     alignItems: "flex-end",
+    justifyContent: "center",
   },
   amount: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#ff4d4d",
-    marginBottom: 4,
-  },
-  time: {
-    fontSize: 14,
-    color: "#9ca3af",
+    color: "#fff",
   },
 });
 
