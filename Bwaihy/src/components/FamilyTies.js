@@ -47,7 +47,7 @@ const FamilyTies = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isSendModalVisible, setIsSendModalVisible] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-  const [isFaceIDModalVisible, setIsFaceIDModalVisible] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
   const [username, setUsername] = useState("");
   const [amount, setAmount] = useState("0");
   const [selectedBeneficiary, setSelectedBeneficiary] = useState(null);
@@ -57,8 +57,7 @@ const FamilyTies = () => {
     if (!username.trim()) {
       return;
     }
-    setIsModalVisible(false);
-    setIsFaceIDModalVisible(true);
+    setCurrentStep(2);
   };
 
   const handleFaceIDSetup = () => {
@@ -71,7 +70,14 @@ const FamilyTies = () => {
 
     setBeneficiaries([...beneficiaries, newBeneficiary]);
     setUsername("");
-    setIsFaceIDModalVisible(false);
+    setCurrentStep(1);
+    setIsModalVisible(false);
+  };
+
+  const handleModalClose = () => {
+    setUsername("");
+    setCurrentStep(1);
+    setIsModalVisible(false);
   };
 
   const handleSendMoney = () => {
@@ -181,90 +187,108 @@ const FamilyTies = () => {
         style={styles.list}
       />
 
-      {/* Add Beneficiary Modal */}
+      {/* Add Beneficiary Modal with Steps */}
       <Modal
         animationType="fade"
         transparent={true}
         visible={isModalVisible}
-        onRequestClose={() => setIsModalVisible(false)}
+        onRequestClose={handleModalClose}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add New Beneficiary</Text>
-            <Text style={styles.modalSubtitle}>
-              Enter the Full Name of the person you want to add to your Family
-              Ties
-            </Text>
-
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Full Name"
-              placeholderTextColor="#999"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="words"
-              autoCorrect={false}
-            />
-
-            <TouchableOpacity
-              style={[
-                styles.confirmButton,
-                !username.trim() && styles.confirmButtonDisabled,
-              ]}
-              onPress={handleAddBeneficiary}
-              disabled={!username.trim()}
-            >
-              <Text style={styles.confirmButtonText}>Next</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => {
-                setUsername("");
-                setIsModalVisible(false);
-              }}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Face ID Setup Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={isFaceIDModalVisible}
-        onRequestClose={() => setIsFaceIDModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Set Up Face ID</Text>
-            <Text style={styles.modalSubtitle}>
-              The Last step is to set up {username} Face ID verification.
-            </Text>
-
-            <View style={styles.faceIDIconContainer}>
-              <Ionicons
-                name="scan-outline"
-                size={80}
-                color="#FF4F6D"
-              />
+            <View style={styles.stepsContainer}>
+              <View style={styles.stepIndicator}>
+                <View
+                  style={[
+                    styles.stepCircle,
+                    currentStep >= 1 && styles.activeStep,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.stepNumber,
+                      currentStep >= 1 && styles.activeStepNumber,
+                    ]}
+                  >
+                    1
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.stepLine,
+                    currentStep >= 2 && styles.activeStep,
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.stepCircle,
+                    currentStep >= 2 && styles.activeStep,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.stepNumber,
+                      currentStep >= 2 && styles.activeStepNumber,
+                    ]}
+                  >
+                    2
+                  </Text>
+                </View>
+              </View>
             </View>
 
-            <TouchableOpacity
-              style={styles.confirmButton}
-              onPress={handleFaceIDSetup}
-            >
-              <Text style={styles.confirmButtonText}>Enable Face ID</Text>
-            </TouchableOpacity>
+            {currentStep === 1 ? (
+              <>
+                <Text style={styles.modalTitle}>Add New Beneficiary</Text>
+                <Text style={styles.modalSubtitle}>
+                  Enter the Full Name of the person you want to add to your
+                  Family Ties
+                </Text>
+
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Full Name"
+                  placeholderTextColor="#999"
+                  value={username}
+                  onChangeText={setUsername}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                />
+
+                <TouchableOpacity
+                  style={[
+                    styles.confirmButton,
+                    !username.trim() && styles.confirmButtonDisabled,
+                  ]}
+                  onPress={handleAddBeneficiary}
+                  disabled={!username.trim()}
+                >
+                  <Text style={styles.confirmButtonText}>Next</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Text style={styles.modalTitle}>Set Up Face ID</Text>
+                <Text style={styles.modalSubtitle}>
+                  The Last step is to set up {username}'s Face ID verification.
+                </Text>
+
+                <View style={styles.faceIDIconContainer}>
+                  <Ionicons name="scan-outline" size={80} color="#FF4F6D" />
+                </View>
+
+                <TouchableOpacity
+                  style={styles.confirmButton}
+                  onPress={handleFaceIDSetup}
+                >
+                  <Text style={styles.confirmButtonText}>Enable Face ID</Text>
+                </TouchableOpacity>
+              </>
+            )}
 
             <TouchableOpacity
               style={styles.cancelButton}
-              onPress={() => {
-                setUsername("");
-                setIsFaceIDModalVisible(false);
-              }}
+              onPress={handleModalClose}
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
@@ -272,9 +296,7 @@ const FamilyTies = () => {
         </View>
       </Modal>
 
-
       {/* Send Money Modal */}
-
       <Modal
         animationType="fade"
         transparent={true}
@@ -359,7 +381,6 @@ const FamilyTies = () => {
       </Modal>
 
       {/* Add Beneficiary Button */}
-
       <TouchableOpacity
         style={styles.addButton}
         onPress={() => setIsModalVisible(true)}
@@ -644,6 +665,43 @@ const styles = StyleSheet.create({
   faceIDIconContainer: {
     marginVertical: 24,
     alignItems: "center",
+  },
+  stepsContainer: {
+    width: "100%",
+    marginBottom: 24,
+  },
+  stepIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stepCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#2a2844",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#383454",
+  },
+  activeStep: {
+    backgroundColor: "#FF4F6D",
+    borderColor: "#FF4F6D",
+  },
+  stepNumber: {
+    color: "#9991b1",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  activeStepNumber: {
+    color: "#fff",
+  },
+  stepLine: {
+    width: 60,
+    height: 2,
+    backgroundColor: "#383454",
+    marginHorizontal: 8,
   },
 });
 
