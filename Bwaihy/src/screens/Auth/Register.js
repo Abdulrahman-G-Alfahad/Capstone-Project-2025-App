@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -7,10 +7,16 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { MaterialIcons as Icon } from "@expo/vector-icons";
+import { register } from "../../api/auth";
+import { useMutation} from "@tanstack/react-query";
+import UserContext from "../../context/UserContext";
+import { Alert } from "react-native";
+
 
 const Register = () => {
   const navigation = useNavigation();
@@ -19,15 +25,42 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [civilId, setCivilId] = useState("");
+  const [bankAccount, setBankAccount] = useState("");
+  const [address, setAddress] = useState("");
+  const [username, setUsername] = useState("");
+  const {user, setUser} = useContext(UserContext);
+
+  const userInfo = {
+    fullName: fullName,
+    email: email,
+    password: password,
+    phoneNumber: phoneNumber,
+    civilId: civilId,
+    bankAccount: bankAccount,
+    address: address,
+    username: username
+  };
+
+  const { mutate } = useMutation({
+    mutationKey: ["register"],
+    mutationFn: () => register(userInfo),
+    onSuccess: (data) => {
+      setUser(true);
+      console.log("Registration successful:", data);
+    },
+    onError: () => {
+      Alert.alert(
+        "Registration Failed",
+        "Please check your credentials and try again"
+      );
+    },
+  });
+
+
 
   const handleRegister = () => {
-    // // Implement registration logic
-    // console.log("Register attempt with:", {
-    //   fullName,
-    //   email,
-    //   password,
-    //   phoneNumber,
-    // });
+    mutate();
   };
 
   return (
@@ -39,6 +72,7 @@ const Register = () => {
         <Text style={styles.headerTitle}>Register</Text>
       </View>
 
+      <ScrollView>
       <View style={styles.content}>
         <Text style={styles.welcomeText}>Create Account</Text>
         <Text style={styles.subText}>Sign up to get started</Text>
@@ -53,6 +87,18 @@ const Register = () => {
               value={fullName}
               onChangeText={setFullName}
               autoCapitalize="words"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Ionicons name="person-outline" size={24} color="#8e8ba7" />
+            <TextInput
+              style={styles.input}
+              placeholder="User Name"
+              placeholderTextColor="#8e8ba7"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
             />
           </View>
 
@@ -103,6 +149,42 @@ const Register = () => {
             />
           </View>
 
+          <View style={styles.inputContainer}>
+            <Ionicons name="person-outline" size={24} color="#8e8ba7" />
+            <TextInput
+              style={styles.input}
+              placeholder="Civil ID"
+              placeholderTextColor="#8e8ba7"
+              value={civilId}
+              onChangeText={setCivilId}
+              autoCapitalize="words"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Ionicons name="person-outline" size={24} color="#8e8ba7" />
+            <TextInput
+              style={styles.input}
+              placeholder="Bank Account Number"
+              placeholderTextColor="#8e8ba7"
+              value={bankAccount}
+              onChangeText={setBankAccount}
+              autoCapitalize="words"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Ionicons name="person-outline" size={24} color="#8e8ba7" />
+            <TextInput
+              style={styles.input}
+              placeholder="Address"
+              placeholderTextColor="#8e8ba7"
+              value={address}
+              onChangeText={setAddress}
+              autoCapitalize="words"
+            />
+          </View>
+
           <TouchableOpacity
             style={styles.faceIdButton}
             onPress={() => {
@@ -129,6 +211,7 @@ const Register = () => {
           </View>
         </View>
       </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
