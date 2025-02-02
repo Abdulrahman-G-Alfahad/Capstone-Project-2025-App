@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import { deleteToken } from "../../api/storage";
+import UserContext from "../../context/UserContext";
 
 const Profile = () => {
   const navigation = useNavigation();
@@ -28,6 +30,7 @@ const Profile = () => {
     photo:
       "https://i.pinimg.com/736x/b1/1a/28/b11a2896d70ef9261fa0ad3c6d8853ca.jpg",
   });
+  const { user, setUser } = useContext(UserContext);
 
   const toggleFaceId = () => {
     setIsFaceIdEnabled((previousState) => !previousState);
@@ -70,6 +73,11 @@ const Profile = () => {
         "https://i.pinimg.com/736x/b1/1a/28/b11a2896d70ef9261fa0ad3c6d8853ca.jpg",
     });
     setIsEditing(false);
+  };
+
+  const handleLogout = () => {
+    deleteToken();
+    setUser(false);
   };
 
   const pickImage = async () => {
@@ -249,7 +257,7 @@ const Profile = () => {
         </View>
 
         {/* Buttons */}
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
           <Ionicons name="log-out-outline" size={20} color="#fff" />
           <Text style={styles.buttonText}>Log Out</Text>
         </TouchableOpacity>
