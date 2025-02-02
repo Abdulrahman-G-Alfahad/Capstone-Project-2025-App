@@ -47,6 +47,7 @@ const FamilyTies = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isSendModalVisible, setIsSendModalVisible] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [isFaceIDModalVisible, setIsFaceIDModalVisible] = useState(false);
   const [username, setUsername] = useState("");
   const [amount, setAmount] = useState("0");
   const [selectedBeneficiary, setSelectedBeneficiary] = useState(null);
@@ -56,7 +57,11 @@ const FamilyTies = () => {
     if (!username.trim()) {
       return;
     }
+    setIsModalVisible(false);
+    setIsFaceIDModalVisible(true);
+  };
 
+  const handleFaceIDSetup = () => {
     const newBeneficiary = {
       id: (beneficiaries.length + 1).toString(),
       name: username,
@@ -66,7 +71,7 @@ const FamilyTies = () => {
 
     setBeneficiaries([...beneficiaries, newBeneficiary]);
     setUsername("");
-    setIsModalVisible(false);
+    setIsFaceIDModalVisible(false);
   };
 
   const handleSendMoney = () => {
@@ -187,17 +192,17 @@ const FamilyTies = () => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add New Beneficiary</Text>
             <Text style={styles.modalSubtitle}>
-              Enter the username of the person you want to add to your Family
+              Enter the Full Name of the person you want to add to your Family
               Ties
             </Text>
 
             <TextInput
               style={styles.modalInput}
-              placeholder="Username"
+              placeholder="Full Name"
               placeholderTextColor="#999"
               value={username}
               onChangeText={setUsername}
-              autoCapitalize="none"
+              autoCapitalize="words"
               autoCorrect={false}
             />
 
@@ -209,7 +214,7 @@ const FamilyTies = () => {
               onPress={handleAddBeneficiary}
               disabled={!username.trim()}
             >
-              <Text style={styles.confirmButtonText}>Add Beneficiary</Text>
+              <Text style={styles.confirmButtonText}>Next</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -224,6 +229,49 @@ const FamilyTies = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Face ID Setup Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={isFaceIDModalVisible}
+        onRequestClose={() => setIsFaceIDModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Set Up Face ID</Text>
+            <Text style={styles.modalSubtitle}>
+              The Last step is to set up {username} Face ID verification.
+            </Text>
+
+            <View style={styles.faceIDIconContainer}>
+              <Ionicons
+                name="scan-outline"
+                size={80}
+                color="#FF4F6D"
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.confirmButton}
+              onPress={handleFaceIDSetup}
+            >
+              <Text style={styles.confirmButtonText}>Enable Face ID</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => {
+                setUsername("");
+                setIsFaceIDModalVisible(false);
+              }}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
 
       {/* Send Money Modal */}
 
@@ -592,6 +640,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#2a2844",
     textAlign: "center",
     fontWeight: "bold",
+  },
+  faceIDIconContainer: {
+    marginVertical: 24,
+    alignItems: "center",
   },
 });
 

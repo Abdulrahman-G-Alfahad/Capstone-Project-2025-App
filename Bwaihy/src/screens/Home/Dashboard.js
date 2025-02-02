@@ -70,7 +70,7 @@ const Dashboard = () => {
   const navigation = useNavigation();
 
   const renderFamilyMember = (member, index) => {
-    if (index < 3) {
+    if (index < 4) {
       return (
         <TouchableOpacity key={member.id} style={styles.familyMember}>
           <View style={styles.avatar}>
@@ -309,8 +309,8 @@ const styles = StyleSheet.create({
   },
   familyTiesContainer: {
     flexDirection: "row",
-    gap: 20,
-    paddingHorizontal: 4,
+    gap: 16,
+    paddingHorizontal: 8,
   },
   familyMember: {
     alignItems: "center",
