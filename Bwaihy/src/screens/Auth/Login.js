@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   StyleSheet,
   View,
@@ -10,16 +10,47 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import UserContext from "../../context/UserContext";
+import { login } from "../../api/auth";
+import { useMutation } from "@tanstack/react-query";
+import { Alert } from "react-native";
+import { jwtDecode } from "jwt-decode";
+import AccountContext from "../../context/AccountContext";
+
 
 const Login = () => {
   const navigation = useNavigation();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const {setUser} = useContext(UserContext);
+  const {setAccountType } = useContext(AccountContext);
+
+
+  const userInfo = {
+    username: username,
+    password: password,
+  };
+
+  const { mutate } = useMutation({
+    mutationKey: ["login"],
+    mutationFn: () => login(userInfo),
+    onSuccess: (data) => {
+      setUser(true);
+      const decodedToken = jwtDecode(data.token);
+      setAccountType(decodedToken.accountType);
+      console.log("Login successful:", data);
+      console.log("Decoded account type:", decodedToken.accountType);
+    },
+    onError: () => {
+      Alert.alert("Login Failed", "Please check your credentials and try again");
+    },
+  });
 
   const handleLogin = () => {
     // TODO: Implement login logic
-    console.log("Login attempt with:", email, password);
+    console.log("Login attempt with:", username, password);
+    mutate();
   };
 
   return (
@@ -40,11 +71,10 @@ const Login = () => {
             <Ionicons name="mail-outline" size={24} color="#8e8ba7" />
             <TextInput
               style={styles.input}
-              placeholder="Email"
+              placeholder="User Name"
               placeholderTextColor="#8e8ba7"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
+              value={username}
+              onChangeText={setUsername}
               autoCapitalize="none"
             />
           </View>
