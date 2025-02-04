@@ -22,7 +22,7 @@ export default function App() {
       setUser(true);
       const decodedToken = jwtDecode(token);
       setAccountType(decodedToken.accountType);
-      console.log("Decoded account type:", decodedToken.accountType);
+      // console.log("Decoded account type:", decodedToken.accountType);
     } else {
       console.log("No token found");
     }
@@ -33,7 +33,7 @@ export default function App() {
   }, []);
 
   const renderDashboard = () => {
-    console.log("Current account type:", accountType);
+    // console.log("Current account type:", accountType);
     if (accountType === "PersonalEntity") {
       return <TabNav />;
     } else if (accountType === "BusinessEntity" || accountType === "AssociateEntity") {

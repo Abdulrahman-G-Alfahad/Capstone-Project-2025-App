@@ -1,6 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 const getToken = async () => {
   const token = await SecureStore.getItemAsync("token");
+
   return token;
 };
 

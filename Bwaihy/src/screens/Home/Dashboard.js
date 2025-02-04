@@ -1,12 +1,15 @@
-import React from "react";
+import React, { use, useContext, useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
   SafeAreaView,
   ScrollView,
+  Image,
+  TextInput,
+  Modal,
+  Button,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import {
@@ -14,40 +17,28 @@ import {
   MaterialCommunityIcons,
   FontAwesome,
 } from "@expo/vector-icons";
-import { beneficiaryData } from "../../data/beneficiaryData";
+import { getProfile } from "../../api/auth";
+import { getToken } from "../../api/storage";
+import { jwtDecode } from "jwt-decode";
+import UserContext from "../../context/UserContext";
 import businesses from "../../data/businessesData";
+import moment from "moment";
+import { addFamily, getFamily } from "../../api/family";
+import { makeDeposit } from "../../api/transactions";
 
-const transactionData = [
-  {
-    id: "1",
-    business: businesses[0],
-    amount: 15,
-    status: "Success",
-  },
-  {
-    id: "2",
-    business: businesses[1],
-    amount: 10,
-    status: "Success",
-  },
-  {
-    id: "3",
-    business: businesses[2],
-    amount: 30,
-    status: "Failed",
-  },
-  {
-    id: "4",
-    business: businesses[0],
-    amount: 5,
-    status: "Success",
-  },
-];
+const BusinessIcon = ({ businessName }) => {
+  const business = businesses.find(
+    (b) => b.name === businessName || b.id === 4
+  ) || {
+    icon: "help-circle",
+    colors: { background: "#9E9E9E", icon: "#fff" },
+    iconSet: MaterialCommunityIcons,
+  };
 
-const TransactionIcon = ({ business }) => {
   const IconComponent = {
     MaterialCommunityIcons,
     FontAwesome,
+    Ionicons,
   }[business.iconSet];
 
   return (
@@ -68,27 +59,173 @@ const TransactionIcon = ({ business }) => {
 
 const Dashboard = () => {
   const navigation = useNavigation();
+  const { user } = useContext(UserContext);
+  const [profile, setProfile] = useState(null);
+  const [familyMembers, setFamilyMembers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [walletBalance, setWalletBalance] = useState("");
+  const [faceId, setFaceId] = useState("");
+  const [depositModalVisible, setDepositModalVisible] = useState(false);
+  const [depositAmount, setDepositAmount] = useState("");
 
-  const renderFamilyMember = (member, index) => {
-    if (index < 4) {
-      return (
-        <TouchableOpacity key={member.id} style={styles.familyMember}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {member.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase()}
-            </Text>
-          </View>
-          <Text style={styles.familyMemberName}>
-            {member.name.split(" ")[0]}
-          </Text>
-        </TouchableOpacity>
-      );
+  useEffect(() => {
+    const fetchProfileAndFamily = async () => {
+      try {
+        const token = await getToken();
+        if (token) {
+          const decodedToken = jwtDecode(token);
+          const userId = decodedToken.userId;
+          const profileData = await getProfile(userId);
+          setProfile(profileData.user);
+
+          const familyData = await getFamily(userId);
+          setFamilyMembers(familyData.familyMembers);
+        } else {
+          throw new Error("No token found");
+        }
+      } catch (err) {
+        setIsError(true);
+        setError(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchProfileAndFamily();
+    }
+  }, [user]);
+
+  const handleAddFamilyMember = async () => {
+    try {
+      const token = await getToken();
+      const decodedToken = jwtDecode(token);
+      const userId = decodedToken.userId;
+      const familyInfo = { fullName, walletBalance, faceId };
+      await addFamily(userId, familyInfo);
+      const familyData = await getFamily(userId);
+      setFamilyMembers(familyData.familyMembers);
+      setModalVisible(false);
+      setFullName("");
+      setWalletBalance("");
+      setFaceId("");
+    } catch (error) {
+      console.error(error);
     }
   };
+
+  const handleMakeDeposit = async () => {
+    console.log("first");
+    try {
+      const token = await getToken();
+      const decodedToken = jwtDecode(token);
+      const userId = decodedToken.userId;
+      console.log(userId, depositAmount);
+      await makeDeposit(userId, { amount: depositAmount });
+      const profileData = await getProfile(userId);
+      setProfile(profileData.user);
+      setDepositModalVisible(false);
+      setDepositAmount("");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const renderFamilyMember = (member, index) => {
+    return (
+      <TouchableOpacity key={member.id} style={styles.familyMember}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>
+            {member.fullName
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+              .toUpperCase()}
+          </Text>
+        </View>
+        <Text style={styles.familyMemberName}>
+          {member.fullName.split(" ")[0]}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const groupTransactionsByDate = (transactions) => {
+    return transactions.reduce((acc, transaction) => {
+      const date = moment(transaction.dateTime).format("YYYY-MM-DD");
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+      acc[date].push(transaction);
+      return acc;
+    }, {});
+  };
+
+  const renderTransactionSection = (date, transactions) => {
+    return (
+      <View key={date + Math.random()}>
+        {transactions.map((transaction) => (
+          <View
+            key={transaction.id}
+            style={[styles.transactionItem, styles.transactionBorder]}
+          >
+            <View style={styles.transactionLeft}>
+              <BusinessIcon
+                businessName={
+                  transaction.receiver.name || transaction.receiver.fullName
+                }
+              />
+              <View style={styles.transactionInfo}>
+                <Text style={styles.businessName}>
+                  {transaction.receiver.name || transaction.receiver.fullName}
+                </Text>
+                <Text style={styles.businessType}>
+                  {transaction.receiver.address}
+                </Text>
+                <Text style={styles.transactionTime}>
+                  {moment(transaction.dateTime).format("h:mm A")}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.transactionRight}>
+              <Text style={styles.transactionAmount}>
+                KD {transaction.amount}
+              </Text>
+            </View>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>
+          Error loading profile: {error.message}
+        </Text>
+      </View>
+    );
+  }
+
+  const groupedTransactions = groupTransactionsByDate(
+    profile.transactionHistory
+  );
+  const limitedTransactions = Object.entries(groupedTransactions)
+    .flatMap(([date, transactions]) => transactions.map((tx) => ({ date, tx })))
+    .slice(-3);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -100,16 +237,23 @@ const Dashboard = () => {
               <Text style={styles.logoText}>LOGO</Text>
             </View>
           </View>
-          <Text style={styles.greeting}>Hello, Nora!</Text>
+          <Text style={styles.greeting}>
+            Hello, {profile ? profile.fullName : "User"}!
+          </Text>
         </View>
 
         <View style={styles.mainContent}>
-          {/* The Avaliable Balance Card */}
+          {/* The Available Balance Card */}
           <View style={styles.balanceCard}>
             <Text style={styles.balanceLabel}>Available Balance</Text>
-            <Text style={styles.balanceAmount}>5,000,000.000 KD</Text>
+            <Text style={styles.balanceAmount}>
+              {profile ? profile.walletBalance.toLocaleString() : "0"} KD
+            </Text>
             <View style={styles.balanceActions}>
-              <TouchableOpacity style={[styles.actionButton, styles.addButton]}>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.addButton]}
+                onPress={() => setDepositModalVisible(true)}
+              >
                 <Ionicons name="add" size={24} color="#fff" weight="bold" />
                 <Text style={styles.actionButtonText}>Add</Text>
               </TouchableOpacity>
@@ -125,10 +269,37 @@ const Dashboard = () => {
                 <Text style={styles.actionButtonText}>Send</Text>
               </TouchableOpacity>
             </View>
+
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={depositModalVisible}
+              onRequestClose={() => {
+                setDepositModalVisible(!depositModalVisible);
+              }}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContainer}>
+                  <Text style={styles.modalTitle}>Add to Balance</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Amount"
+                    value={depositAmount}
+                    onChangeText={setDepositAmount}
+                    keyboardType="numeric"
+                  />
+                  <Button title="Submit" onPress={handleMakeDeposit} />
+                  <Button
+                    title="Cancel"
+                    onPress={() => setDepositModalVisible(false)}
+                    color="red"
+                  />
+                </View>
+              </View>
+            </Modal>
           </View>
 
           {/* The Family Ties Section */}
-
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Family Ties</Text>
             <ScrollView
@@ -137,58 +308,48 @@ const Dashboard = () => {
               style={styles.familyTiesScrollView}
             >
               <View style={styles.familyTiesContainer}>
-                {beneficiaryData.map((member, index) =>
-                  renderFamilyMember(member, index)
-                )}
                 <TouchableOpacity
-                  style={styles.seeMoreButton}
-                  onPress={() => navigation.navigate("FamilyTies")}
+                  style={styles.addFamilyButton}
+                  onPress={() => setModalVisible(true)}
                 >
-                  <View style={[styles.avatar, styles.seeMoreAvatar]}>
-                    <Ionicons name="arrow-forward" size={24} color="#fff" />
+                  <View style={[styles.avatar, styles.addAvatar]}>
+                    <Ionicons name="add" size={24} color="#fff" />
                   </View>
-                  <Text style={styles.familyMemberName}>See More</Text>
                 </TouchableOpacity>
+                {familyMembers.length > 0 ? (
+                  familyMembers.map((member, index) =>
+                    renderFamilyMember(member, index)
+                  )
+                ) : (
+                  <Text style={styles.emptyMessage}>
+                    No family members found.
+                  </Text>
+                )}
               </View>
             </ScrollView>
           </View>
 
           {/* The Transactions Section */}
-
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Transactions</Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Transactions")}
+            >
+              <Text style={styles.sectionTitle}>Transactions</Text>
+            </TouchableOpacity>
             <View style={styles.transactionsContainer}>
-              {transactionData.map((transaction, index) => (
-                <View
-                  key={transaction.id}
-                  style={[
-                    styles.transactionItem,
-                    index !== 0 && styles.transactionBorder,
-                  ]}
-                >
-                  <View style={styles.transactionLeft}>
-                    <TransactionIcon business={transaction.business} />
-                    <View style={styles.transactionInfo}>
-                      <Text style={styles.businessName}>
-                        {transaction.business.name}
-                      </Text>
-                      <Text style={styles.businessType}>
-                        {transaction.business.type}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.transactionRight}>
-                    <Text style={styles.transactionAmount}>
-                      KD {transaction.amount}
-                    </Text>
-                  </View>
-                </View>
-              ))}
+              {profile && profile.transactionHistory.length > 0 ? (
+                limitedTransactions.map(({ date, tx }) =>
+                  renderTransactionSection(date, [tx])
+                )
+              ) : (
+                <Text style={styles.emptyMessage}>
+                  You have no transactions.
+                </Text>
+              )}
             </View>
           </View>
 
-          {/* The Promotion Card / Needs editing , make iot carousel add more promotions*/}
-
+          {/* The Promotion Card / Needs editing , make it carousel add more promotions */}
           {/* <View style={styles.promotionCard}>
             <View style={styles.promotionContent}>
               <Image
@@ -205,6 +366,47 @@ const Dashboard = () => {
           </View> */}
         </View>
       </View>
+
+      {/* Add Family Member Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Add Family Member</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Full Name"
+              value={fullName}
+              onChangeText={setFullName}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Wallet Balance"
+              value={walletBalance}
+              onChangeText={setWalletBalance}
+              keyboardType="numeric"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Face ID"
+              value={faceId}
+              onChangeText={setFaceId}
+            />
+            <Button title="Submit" onPress={handleAddFamilyMember} />
+            <Button
+              title="Cancel"
+              onPress={() => setModalVisible(false)}
+              color="red"
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -285,6 +487,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF4F6D",
     fontWeight: "700",
   },
+  addFamilyButton: {
+    //backgroundColor: "#FF4F6D",
+    fontWeight: "700",
+  },
   sendButton: {
     backgroundColor: "#5066C0",
     fontWeight: "700",
@@ -348,8 +554,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   transactionBorder: {
-    borderTopWidth: 1,
-    borderTopColor: "#1f1d35",
+    borderBottomWidth: 1,
+    borderBottomColor: "#1f1d35",
   },
   transactionLeft: {
     flexDirection: "row",
@@ -373,6 +579,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   businessType: {
+    color: "#9991b1",
+    fontSize: 12,
+  },
+  transactionTime: {
     color: "#9991b1",
     fontSize: 12,
   },
@@ -415,6 +625,56 @@ const styles = StyleSheet.create({
   },
   seeMoreAvatar: {
     backgroundColor: "#2a2844",
+  },
+  emptyMessage: {
+    color: "#9991b1",
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  loadingText: {
+    color: "#fff",
+    fontSize: 18,
+    textAlign: "center",
+    marginTop: 20,
+  },
+  errorText: {
+    color: "#ff4f6d",
+    fontSize: 18,
+    textAlign: "center",
+    marginTop: 20,
+  },
+  sectionHeader: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginVertical: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContainer: {
+    width: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  input: {
+    width: "100%",
+    height: 40,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: 10,
   },
 });
 

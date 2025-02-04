@@ -39,8 +39,8 @@ const Login = () => {
       setUser(true);
       const decodedToken = jwtDecode(data.token);
       setAccountType(decodedToken.accountType);
-      console.log("Login successful:", data);
-      console.log("Decoded account type:", decodedToken.accountType);
+      // console.log("Login successful:", data);
+      // console.log("Decoded account type:", decodedToken.accountType);
     },
     onError: () => {
       Alert.alert("Login Failed", "Please check your credentials and try again");

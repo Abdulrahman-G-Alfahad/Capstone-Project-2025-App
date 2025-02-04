@@ -1,5 +1,8 @@
+import { id } from "date-fns/locale";
+
 const businesses = [
   {
+    id: 1,
     name: "Alfa",
     type: "Petrol Station",
     icon: "gas-station",
@@ -10,7 +13,8 @@ const businesses = [
     },
   },
   {
-    name: "Trolly",
+    id: 2,
+    name: "business",
     type: "Convenience Store",
     icon: "shopping-cart",
     iconSet: "FontAwesome",
@@ -20,6 +24,7 @@ const businesses = [
     },
   },
   {
+    id: 3,
     name: "Mishref Co-op",
     type: "Grocery Store",
     icon: "shopping-basket",
@@ -30,6 +35,7 @@ const businesses = [
     },
   },
   {
+    id: 4,
     name: "Hi&Buy",
     type: "Convenience Store",
     icon: "store",
