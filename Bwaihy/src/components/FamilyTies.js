@@ -47,7 +47,6 @@ const FamilyTies = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isSendModalVisible, setIsSendModalVisible] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-  const [isFaceIDModalVisible, setIsFaceIDModalVisible] = useState(false);
   const [username, setUsername] = useState("");
   const [amount, setAmount] = useState("0");
   const [selectedBeneficiary, setSelectedBeneficiary] = useState(null);
@@ -57,11 +56,6 @@ const FamilyTies = () => {
     if (!username.trim()) {
       return;
     }
-    setIsModalVisible(false);
-    setIsFaceIDModalVisible(true);
-  };
-
-  const handleFaceIDSetup = () => {
     const newBeneficiary = {
       id: (beneficiaries.length + 1).toString(),
       name: username,
@@ -71,7 +65,7 @@ const FamilyTies = () => {
 
     setBeneficiaries([...beneficiaries, newBeneficiary]);
     setUsername("");
-    setIsFaceIDModalVisible(false);
+    setIsModalVisible(false);
   };
 
   const handleSendMoney = () => {
@@ -229,49 +223,6 @@ const FamilyTies = () => {
           </View>
         </View>
       </Modal>
-
-      {/* Face ID Setup Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={isFaceIDModalVisible}
-        onRequestClose={() => setIsFaceIDModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Set Up Face ID</Text>
-            <Text style={styles.modalSubtitle}>
-              The Last step is to set up {username} Face ID verification.
-            </Text>
-
-            <View style={styles.faceIDIconContainer}>
-              <Ionicons
-                name="scan-outline"
-                size={80}
-                color="#FF4F6D"
-              />
-            </View>
-
-            <TouchableOpacity
-              style={styles.confirmButton}
-              onPress={handleFaceIDSetup}
-            >
-              <Text style={styles.confirmButtonText}>Enable Face ID</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => {
-                setUsername("");
-                setIsFaceIDModalVisible(false);
-              }}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
 
       {/* Send Money Modal */}
 
@@ -640,10 +591,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#2a2844",
     textAlign: "center",
     fontWeight: "bold",
-  },
-  faceIDIconContainer: {
-    marginVertical: 24,
-    alignItems: "center",
   },
 });
 
