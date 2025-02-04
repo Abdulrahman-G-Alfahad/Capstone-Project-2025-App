@@ -295,6 +295,7 @@ const Transactions = () => {
                 <Ionicons name="close" size={24} color="#fff" />
               </TouchableOpacity>
               <CalendarPicker
+              style={{ flex: 1 }} 
                 startFromMonday={true}
                 minDate={isStartDate ? undefined : startDate}
                 maxDate={isStartDate ? endDate : undefined}

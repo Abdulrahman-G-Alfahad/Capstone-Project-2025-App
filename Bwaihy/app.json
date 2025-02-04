@@ -7,25 +7,38 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "permissions": ["CAMERA"],
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app requires camera access for face detection and Face ID verification.",
+        "NSMicrophoneUsageDescription": "This app requires microphone access for Face ID verification.",
+        "NSPhotoLibraryUsageDescription": "This app requires photo library access for Face ID verification.",
+        "NSFaceIDUsageDescription": "This app uses Face ID for secure authentication."
+      },
+      "bundleIdentifier": "com.noraalmarri.Bwaihy"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.noraalmarri.Bwaihy"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-secure-store"
-    ]
+    "plugins": ["expo-secure-store", "expo-camera"]
   }
 }
