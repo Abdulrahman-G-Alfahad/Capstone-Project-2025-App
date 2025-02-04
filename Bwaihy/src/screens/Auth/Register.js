@@ -46,7 +46,7 @@ const Register = () => {
     mutationKey: ["register"],
     mutationFn: () => register(userInfo),
     onSuccess: (data) => {
-      setUser(true);
+      navigation.navigate("Login");
       console.log("Registration successful:", data);
     },
     onError: () => {

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   Text,
@@ -14,8 +14,11 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { deleteToken } from "../../api/storage";
+import { deleteToken, getToken } from "../../api/storage";
 import UserContext from "../../context/UserContext";
+import { useQuery } from "@tanstack/react-query";
+import { getProfile } from "../../api/auth";
+import { jwtDecode } from "jwt-decode";
 
 const Profile = () => {
   const navigation = useNavigation();
@@ -23,14 +26,38 @@ const Profile = () => {
   const [isPrivacyEnabled, setIsPrivacyEnabled] = useState(false);
   const [lockAnimation] = useState(new Animated.Value(0));
   const [isEditing, setIsEditing] = useState(false);
-  const [userData, setUserData] = useState({
-    name: "Nora Almarri",
-    email: "nora@nora.com",
-    phone: "12345678",
-    photo:
-      "https://i.pinimg.com/736x/b1/1a/28/b11a2896d70ef9261fa0ad3c6d8853ca.jpg",
-  });
+  const [name, setName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [photo, setPhoto] = useState("");
+
   const { user, setUser } = useContext(UserContext);
+
+  const fetchProfile = async () => {
+    const token = await getToken();
+    if (token) {
+      // console.log(token)
+      // console.log(jwtDecode(token))
+      const decodedToken = jwtDecode(token);
+      const userId = decodedToken.userId; // Assuming the user ID is stored in the 'id' field
+      return getProfile(userId);
+    }
+    throw new Error("No token found");
+  };
+
+  const { data: profile, isLoading, isError, error } = useQuery({
+    queryKey: ["user", user],
+    queryFn: fetchProfile,
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setName(profile.user.fullName);
+      setPhoneNumber(profile.user.phoneNumber);
+      setEmail(profile.user.email);
+      setPhoto(profile.user.photo);
+    }
+  }, [profile]);
 
   const toggleFaceId = () => {
     setIsFaceIdEnabled((previousState) => !previousState);
@@ -65,13 +92,12 @@ const Profile = () => {
 
   const handleCancel = () => {
     // Reset user data to original state
-    setUserData({
-      name: "Nora Almarri",
-      email: "nora@nora.com",
-      phone: "12345678",
-      photo:
-        "https://i.pinimg.com/736x/b1/1a/28/b11a2896d70ef9261fa0ad3c6d8853ca.jpg",
-    });
+    if (profile) {
+      setName(profile.fullName);
+      setPhoneNumber(profile.phoneNumber);
+      setEmail(profile.email);
+      setPhoto(profile.photo);
+    }
     setIsEditing(false);
   };
 
@@ -99,12 +125,28 @@ const Profile = () => {
       });
 
       if (!result.canceled) {
-        setUserData({ ...userData, photo: result.assets[0].uri });
+        setPhoto(result.assets[0].uri);
       }
     } catch (error) {
       Alert.alert("Error picking image");
     }
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>Error loading profile: {error.message}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -142,14 +184,10 @@ const Profile = () => {
       </View>
 
       {/* Profile Content */}
-      {/* <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-      > */}
       <View style={styles.content}>
         {/* Profile Picture Section */}
         <View style={styles.profileImageContainer}>
-          <Image source={{ uri: userData.photo }} style={styles.profileImage} />
+          <Image source={{ uri: photo }} style={styles.profileImage} />
           {isEditing && (
             <TouchableOpacity
               style={styles.editImageButton}
@@ -164,8 +202,8 @@ const Profile = () => {
           <View style={styles.nameEditContainer}>
             <TextInput
               style={[styles.userName, styles.input]}
-              value={userData.name}
-              onChangeText={(text) => setUserData({ ...userData, name: text })}
+              value={name}
+              onChangeText={setName}
               placeholder="Enter your name"
               placeholderTextColor="#8e8ba7"
             />
@@ -177,7 +215,7 @@ const Profile = () => {
             />
           </View>
         ) : (
-          <Text style={styles.userName}>{userData.name}</Text>
+          <Text style={styles.userName}>{name}</Text>
         )}
 
         {/* User Details Section */}
@@ -188,13 +226,11 @@ const Profile = () => {
             {isEditing ? (
               <TextInput
                 style={[styles.inputText, styles.input]}
-                value={userData.email}
-                onChangeText={(text) =>
-                  setUserData({ ...userData, email: text })
-                }
+                value={email}
+                onChangeText={setEmail}
               />
             ) : (
-              <Text style={styles.inputText}>{userData.email}</Text>
+              <Text style={styles.inputText}>{email}</Text>
             )}
           </View>
 
@@ -204,14 +240,12 @@ const Profile = () => {
             {isEditing ? (
               <TextInput
                 style={[styles.inputText, styles.input]}
-                value={userData.phone}
-                onChangeText={(text) =>
-                  setUserData({ ...userData, phone: text })
-                }
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
                 keyboardType="phone-pad"
               />
             ) : (
-              <Text style={styles.inputText}>{userData.phone}</Text>
+              <Text style={styles.inputText}>{phoneNumber}</Text>
             )}
           </View>
 
@@ -262,7 +296,6 @@ const Profile = () => {
           <Text style={styles.buttonText}>Log Out</Text>
         </TouchableOpacity>
       </View>
-      {/* </ScrollView> */}
     </View>
   );
 };
@@ -421,6 +454,18 @@ const styles = StyleSheet.create({
   editActionButton: {
     padding: 8,
     marginLeft: 8,
+  },
+  loadingText: {
+    color: "#fff",
+    fontSize: 18,
+    textAlign: "center",
+    marginTop: 20,
+  },
+  errorText: {
+    color: "#ff4f6d",
+    fontSize: 18,
+    textAlign: "center",
+    marginTop: 20,
   },
 });
 
