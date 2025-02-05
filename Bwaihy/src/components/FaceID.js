@@ -19,6 +19,7 @@ const FaceID = ({
   onSuccess,
   userData,
   mode = "enroll",
+  setFaceId,
 }) => {
   const [showFaceIO, setShowFaceIO] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
@@ -89,7 +90,7 @@ const FaceID = ({
     <html>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: gap: https://ssl.gstatic.com  https://cdn.faceio.net; script-src * 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.faceio.net https://api.faceio.net; img-src * 'self' data: blob: https://cdn.faceio.net https://api.faceio.net; media-src * 'self' blob: mediastream:; connect-src * 'self' blob: mediastream: https://cdn.faceio.net https://api.faceio.net; style-src * 'self' 'unsafe-inline';">
+        <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: gap: blob: mediastream: https://ssl.gstatic.com https://cdn.faceio.net https://api.faceio.net; script-src * 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.faceio.net https://api.faceio.net; img-src * 'self' data: blob: https://cdn.faceio.net https://api.faceio.net; media-src * 'self' blob: mediastream:; connect-src * 'self' blob: mediastream: https://cdn.faceio.net https://api.faceio.net; style-src * 'self' 'unsafe-inline';">
         <script>
           // Create a global promise to track script loading
           window.faceioSDKLoaded = new Promise((resolve, reject) => {
@@ -166,19 +167,26 @@ const FaceID = ({
               await window.faceioSDKLoaded;
               
               updateStatus('Initializing FaceIO...');
+              console.log('Creating faceIO instance with public ID:', '${FACEIO_PUBLIC_ID}');
               faceioInstance = new faceIO('${FACEIO_PUBLIC_ID}');
               
               if (!faceioInstance) {
                 throw new Error('Failed to create FaceIO instance');
               }
-
+              
+              console.log('FaceIO instance created successfully');
+              updateStatus('FaceIO initialized successfully');
+              
+              await new Promise(resolve => setTimeout(resolve, 1000)); // Small delay before starting
               await startFaceIO();
             } catch (error) {
               console.error('FaceIO initialization error:', error);
-              updateStatus('Error: ' + error.message);
+              console.error('Error stack:', error.stack);
+              updateStatus('Error: ' + (error.message || 'Failed to initialize FaceIO'));
               window.ReactNativeWebView.postMessage(JSON.stringify({ 
                 type: 'error', 
-                error: error.message 
+                error: error.message || 'Failed to initialize FaceIO',
+                stack: error.stack
               }));
             }
           }
@@ -288,8 +296,8 @@ const FaceID = ({
         setShowFaceIO(false);
         if (mode === "enroll") {
           // Store the facial ID for future authentication
+          setFaceId(message.data.facialId);
           const { facialId, timestamp, details } = message.data;
-          // You might want to store this information in your app's state or storage
           console.log("Enrollment successful:", {
             facialId,
             timestamp,
@@ -438,6 +446,13 @@ const FaceID = ({
               incognito={true}
               allowsBackForwardNavigationGestures={false}
               applicationNameForUserAgent="BWaihy-iOS"
+              webviewDebuggingEnabled={true}
+              androidLayerType="hardware"
+              androidHardwareAccelerationDisabled={false}
+              setSupportMultipleWindows={false}
+              overScrollMode="never"
+              textZoom={100}
+              pullToRefreshEnabled={false}
               injectedJavaScript={`
                 window.onerror = function(message, source, lineno, colno, error) {
                   console.log('JavaScript Error:', message, source, lineno);

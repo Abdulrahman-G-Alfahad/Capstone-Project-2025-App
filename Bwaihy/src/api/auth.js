@@ -20,7 +20,7 @@ const login = async (userInfo) => {
 };
 
 const register = async (userInfo) => {
-    // console.log(userInfo);
+    console.log(userInfo);
   try {
     const res = await instance.post("/auth/signup", userInfo);
     if (res.data) {
