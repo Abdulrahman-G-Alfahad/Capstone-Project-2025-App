@@ -6,6 +6,8 @@ import FamilyTies from "../../components/FamilyTies";
 import Transactions from "../../components/Transactions";
 import QRCode from "../../components/QRCode";
 import AddBeneficiary from "../../screens/Home/AddBeneficiary";
+import Profile from "../../screens/Auth/Profile";
+import FamilyTieDetails from '../../screens/Home/FamilyTieDetails';
 
 const Stack = createNativeStackNavigator();
 
@@ -17,6 +19,14 @@ const HomeStack = () => {
       <Stack.Screen name="Transactions" component={Transactions} />
       <Stack.Screen name="QRCode" component={QRCode} />
       <Stack.Screen name="AddBeneficiary" component={AddBeneficiary} />
+      <Stack.Screen name="Profile" component={Profile} />
+      <Stack.Screen
+        name="FamilyTieDetails"
+        component={FamilyTieDetails}
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack.Navigator>
   );
 };
