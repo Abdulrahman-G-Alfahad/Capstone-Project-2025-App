@@ -30,6 +30,7 @@ const Register = () => {
   const [username, setUsername] = useState("");
   const { user, setUser } = useContext(UserContext);
   const [isFaceIDModalVisible, setIsFaceIDModalVisible] = useState(false);
+  const [faceId, setFaceId] = useState("");
 
   const userInfo = {
     fullName: fullName,
@@ -40,16 +41,19 @@ const Register = () => {
     bankAccount: bankAccount,
     address: address,
     username: username,
+    faceId: faceId,
   };
 
   const { mutate } = useMutation({
     mutationKey: ["register"],
     mutationFn: () => register(userInfo),
     onSuccess: (data) => {
+      console.log(data);
       navigation.navigate("Login");
       console.log("Registration successful:", data);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Registration error:", error);
       Alert.alert(
         "Registration Failed",
         "Please check your credentials and try again"
@@ -57,7 +61,28 @@ const Register = () => {
     },
   });
 
+  // const handleRegister = () => {
+  //   mutate();
+  // };
+
   const handleRegister = () => {
+    console.log("first");
+    console.log(faceId);
+    if (
+      !fullName ||
+      !email ||
+      !password ||
+      !phoneNumber ||
+      !civilId ||
+      !bankAccount ||
+      !address ||
+      !username
+    ) {
+      Alert.alert("Validation Error", "Please fill in all fields");
+      return;
+    }
+
+    console.log("Registering user with data:", userInfo);
     mutate();
   };
 
@@ -235,6 +260,7 @@ const Register = () => {
         onClose={() => setIsFaceIDModalVisible(false)}
         onSuccess={handleFaceIDSuccess}
         userData={{ email, username, fullName }}
+        setFaceId={setFaceId}
       />
     </View>
   );

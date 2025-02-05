@@ -17,15 +17,13 @@ import { Alert } from "react-native";
 import { jwtDecode } from "jwt-decode";
 import AccountContext from "../../context/AccountContext";
 
-
 const Login = () => {
   const navigation = useNavigation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const {setUser} = useContext(UserContext);
-  const {setAccountType } = useContext(AccountContext);
-
+  const { setUser } = useContext(UserContext);
+  const { setAccountType } = useContext(AccountContext);
 
   const userInfo = {
     username: username,
@@ -36,14 +34,20 @@ const Login = () => {
     mutationKey: ["login"],
     mutationFn: () => login(userInfo),
     onSuccess: (data) => {
+      console.log(data)
+      console.log(data.token)
       setUser(true);
       const decodedToken = jwtDecode(data.token);
+      console.log(decodedToken)
       setAccountType(decodedToken.accountType);
       // console.log("Login successful:", data);
       // console.log("Decoded account type:", decodedToken.accountType);
     },
     onError: () => {
-      Alert.alert("Login Failed", "Please check your credentials and try again");
+      Alert.alert(
+        "Login Failed",
+        "Please check your credentials and try again"
+      );
     },
   });
 
