@@ -23,8 +23,11 @@ import { jwtDecode } from "jwt-decode";
 import UserContext from "../../context/UserContext";
 import businesses from "../../data/businessesData";
 import moment from "moment";
-import { addFamily, getFamily } from "../../api/family";
+import { getFamily } from "../../api/family";
 import { makeDeposit } from "../../api/transactions";
+import AddMoneyButton from "../../components/AddMoneyButton";
+import SendMoneyButton from "../../components/SendMoneyButton";
+import AddFamilyTies from "../../components/AddFamilyTies";
 
 const BusinessIcon = ({ businessName }) => {
   const business = businesses.find(
@@ -69,8 +72,6 @@ const Dashboard = () => {
   const [fullName, setFullName] = useState("");
   const [walletBalance, setWalletBalance] = useState("");
   const [faceId, setFaceId] = useState("");
-  const [depositModalVisible, setDepositModalVisible] = useState(false);
-  const [depositAmount, setDepositAmount] = useState("");
 
   useEffect(() => {
     const fetchProfileAndFamily = async () => {
@@ -100,44 +101,17 @@ const Dashboard = () => {
     }
   }, [user]);
 
-  const handleAddFamilyMember = async () => {
-    try {
-      const token = await getToken();
-      const decodedToken = jwtDecode(token);
-      const userId = decodedToken.userId;
-      const familyInfo = { fullName, walletBalance, faceId };
-      await addFamily(userId, familyInfo);
-      const familyData = await getFamily(userId);
-      setFamilyMembers(familyData.familyMembers);
-      setModalVisible(false);
-      setFullName("");
-      setWalletBalance("");
-      setFaceId("");
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleMakeDeposit = async () => {
-    console.log("first");
-    try {
-      const token = await getToken();
-      const decodedToken = jwtDecode(token);
-      const userId = decodedToken.userId;
-      console.log(userId, depositAmount);
-      await makeDeposit(userId, { amount: depositAmount });
-      const profileData = await getProfile(userId);
-      setProfile(profileData.user);
-      setDepositModalVisible(false);
-      setDepositAmount("");
-    } catch (error) {
-      console.error(error);
-    }
+  const handleFamilyMemberAdded = (updatedFamilyMembers) => {
+    setFamilyMembers(updatedFamilyMembers);
   };
 
   const renderFamilyMember = (member, index) => {
     return (
-      <TouchableOpacity key={member.id} style={styles.familyMember}>
+      <TouchableOpacity
+        key={member.id}
+        style={styles.familyMember}
+        onPress={() => navigation.navigate("FamilyTieDetails", { member })}
+      >
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
             {member.fullName
@@ -237,11 +211,22 @@ const Dashboard = () => {
               <Text style={styles.logoText}>LOGO</Text>
             </View>
           </View>
-          <Text style={styles.greeting}>
-            Hello, {profile ? profile.fullName : "User"}!
-          </Text>
+          <View style={styles.greetingRow}>
+            <Text style={styles.greeting}>
+              Welcome, {profile ? profile.fullName : "User"} !
+            </Text>
+
+            {/* Profile Icon Navigation */}
+            <TouchableOpacity
+              style={styles.profileIcon}
+              onPress={() => navigation.navigate("Profile")}
+            >
+              <Ionicons name="person-circle-outline" size={32} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </View>
 
+        {/* Dashboard Main Content */}
         <View style={styles.mainContent}>
           {/* The Available Balance Card */}
           <View style={styles.balanceCard}>
@@ -249,54 +234,12 @@ const Dashboard = () => {
             <Text style={styles.balanceAmount}>
               {profile ? profile.walletBalance.toLocaleString() : "0"} KD
             </Text>
-            <View style={styles.balanceActions}>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.addButton]}
-                onPress={() => setDepositModalVisible(true)}
-              >
-                <Ionicons name="add" size={24} color="#fff" weight="bold" />
-                <Text style={styles.actionButtonText}>Add</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.sendButton]}
-              >
-                <Ionicons
-                  name="paper-plane"
-                  size={24}
-                  color="#fff"
-                  weight="bold"
-                />
-                <Text style={styles.actionButtonText}>Send</Text>
-              </TouchableOpacity>
-            </View>
 
-            <Modal
-              animationType="slide"
-              transparent={true}
-              visible={depositModalVisible}
-              onRequestClose={() => {
-                setDepositModalVisible(!depositModalVisible);
-              }}
-            >
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContainer}>
-                  <Text style={styles.modalTitle}>Add to Balance</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Amount"
-                    value={depositAmount}
-                    onChangeText={setDepositAmount}
-                    keyboardType="numeric"
-                  />
-                  <Button title="Submit" onPress={handleMakeDeposit} />
-                  <Button
-                    title="Cancel"
-                    onPress={() => setDepositModalVisible(false)}
-                    color="red"
-                  />
-                </View>
-              </View>
-            </Modal>
+            {/* Add / Send Buttons Componants */}
+            <View style={styles.balanceActions}>
+              <AddMoneyButton onSuccess={setProfile} />
+              <SendMoneyButton />
+            </View>
           </View>
 
           {/* The Family Ties Section */}
@@ -315,19 +258,29 @@ const Dashboard = () => {
                   <View style={[styles.avatar, styles.addAvatar]}>
                     <Ionicons name="add" size={24} color="#fff" />
                   </View>
+                  <Text style={styles.addFamilyTiesButtonText}>Add</Text>
                 </TouchableOpacity>
                 {familyMembers.length > 0 ? (
                   familyMembers.map((member, index) =>
                     renderFamilyMember(member, index)
                   )
                 ) : (
-                  <Text style={styles.emptyMessage}>
-                    No family members found.
-                  </Text>
+                  <View style={styles.emptyMessageWrapper}>
+                    <Text style={styles.emptyMessage}>
+                      No family members found.
+                    </Text>
+                  </View>
                 )}
               </View>
             </ScrollView>
           </View>
+
+          {/* Add Family Ties Modal */}
+          <AddFamilyTies
+            modalVisible={modalVisible}
+            setModalVisible={setModalVisible}
+            onFamilyMemberAdded={handleFamilyMemberAdded}
+          />
 
           {/* The Transactions Section */}
           <View style={styles.section}>
@@ -348,65 +301,8 @@ const Dashboard = () => {
               )}
             </View>
           </View>
-
-          {/* The Promotion Card / Needs editing , make it carousel add more promotions */}
-          {/* <View style={styles.promotionCard}>
-            <View style={styles.promotionContent}>
-              <Image
-                source={{
-                  uri: "https://www.trolley.com.kw/storage/store_location/default.png",
-                }}
-                style={styles.promotionLogo}
-              />
-              <Text style={styles.promotionText}>20 % OFF</Text>
-              <Text style={styles.promotionSubtext}>
-                Exclusive deals just for you!
-              </Text>
-            </View>
-          </View> */}
         </View>
       </View>
-
-      {/* Add Family Member Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(!modalVisible);
-        }}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Add Family Member</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Full Name"
-              value={fullName}
-              onChangeText={setFullName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Wallet Balance"
-              value={walletBalance}
-              onChangeText={setWalletBalance}
-              keyboardType="numeric"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Face ID"
-              value={faceId}
-              onChangeText={setFaceId}
-            />
-            <Button title="Submit" onPress={handleAddFamilyMember} />
-            <Button
-              title="Cancel"
-              onPress={() => setModalVisible(false)}
-              color="red"
-            />
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 };
@@ -445,12 +341,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  greetingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: -4,
+    marginLeft: 8,
+  },
   greeting: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#fff",
-    marginBottom: -4,
-    marginLeft: 8,
+  },
+  profileIcon: {
+    padding: 4,
   },
   balanceCard: {
     backgroundColor: "#2a2844",
@@ -488,7 +392,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   addFamilyButton: {
-    //backgroundColor: "#FF4F6D",
+    alignItems: "center",
     fontWeight: "700",
   },
   sendButton: {
@@ -517,6 +421,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 16,
     paddingHorizontal: 8,
+    justifyContent: "center",
   },
   familyMember: {
     alignItems: "center",
@@ -626,10 +531,15 @@ const styles = StyleSheet.create({
   seeMoreAvatar: {
     backgroundColor: "#2a2844",
   },
+  emptyMessageWrapper: {
+    height: 80,
+    justifyContent: "center",
+    marginLeft: 16,
+  },
   emptyMessage: {
     color: "#9991b1",
     fontSize: 16,
-    marginLeft: 8,
+    textAlign: "left",
   },
   loadingText: {
     color: "#fff",
@@ -651,30 +561,99 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
+    backgroundColor: "rgba(31, 29, 53, 0.95)",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  modalContainer: {
-    width: "80%",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 20,
+  modalView: {
+    backgroundColor: "#2a2844",
+    borderRadius: 24,
+    padding: 32,
+    width: "90%",
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.44,
+    shadowRadius: 10.32,
+    elevation: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    position: "relative",
+  },
+  modalHeader: {
+    width: "100%",
+    marginBottom: 24,
+    paddingTop: 8,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 20,
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#fff",
+    textAlign: "center",
+    textShadowColor: "rgba(255, 79, 109, 0.3)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
-  input: {
+  modalContent: {
     width: "100%",
-    height: 40,
-    borderColor: "#ccc",
+    alignItems: "center",
+  },
+  inputContainer: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(31, 29, 53, 0.95)",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
     borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginBottom: 10,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  modalInput: {
+    flex: 1,
+    color: "#fff",
+    fontSize: 16,
+    marginLeft: 10,
+  },
+  modalButton: {
+    width: "100%",
+    backgroundColor: "#FF4F6D",
+    padding: 18,
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: "#FF4F6D",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 5.46,
+    elevation: 9,
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+    textAlign: "center",
+    textShadowColor: "rgba(0, 0, 0, 0.25)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  closeButton: {
+    position: "absolute",
+    right: 16,
+    top: 16,
+    padding: 8,
+    zIndex: 1,
+  },
+  addFamilyTiesButtonText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+    textAlign: "center",
   },
 });
 
