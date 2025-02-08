@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -7,12 +7,17 @@ import {
   TextInput,
   FlatList,
   Modal,
+  Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { beneficiaryData } from "../data/beneficiaryData";
+import UserContext from "../context/UserContext";
+import { getFamily, deleteFamily, addFamily } from "../api/family";
+import { jwtDecode } from "jwt-decode";
+import { getToken } from "../api/storage";
 
 const getInitials = (name) => {
+  if (!name) return ""; // Return empty string if name is undefined or null
   const names = name.split(" ");
   if (names.length >= 2) {
     return `${names[0][0]}${names[1][0]}`.toUpperCase();
@@ -32,115 +37,102 @@ const getInitials = (name) => {
 
 const LetterAvatar = ({ name }) => {
   const initials = getInitials(name);
-  const backgroundColor = "#5066C0";
 
   return (
-    <View style={[styles.avatar, { backgroundColor }]}>
-      <Text style={styles.avatarText}>{initials}</Text>
+    <View style={styles.avatar}>
+      <Text style={styles.avatarText}>{initials || "?"}</Text>
     </View>
   );
 };
 
 const FamilyTies = () => {
   const navigation = useNavigation();
+  const { user } = useContext(UserContext);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isSendModalVisible, setIsSendModalVisible] = useState(false);
-  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [username, setUsername] = useState("");
-  const [amount, setAmount] = useState("0");
-  const [selectedBeneficiary, setSelectedBeneficiary] = useState(null);
-  const [beneficiaries, setBeneficiaries] = useState(beneficiaryData);
+  const [familyMembers, setFamilyMembers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleAddBeneficiary = () => {
+  useEffect(() => {
+    fetchFamilyMembers();
+  }, [user]);
+
+  const fetchFamilyMembers = async () => {
+    try {
+      const token = await getToken();
+      if (token) {
+        const decodedToken = jwtDecode(token);
+        const userId = decodedToken.userId;
+        const response = await getFamily(userId);
+        setFamilyMembers(response.familyMembers);
+      }
+    } catch (error) {
+      console.error("Error fetching family members:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddBeneficiary = async () => {
     if (!username.trim()) {
       return;
     }
-    const newBeneficiary = {
-      id: (beneficiaries.length + 1).toString(),
-      name: username,
-      relationship: "Friend",
-      dateAdded: new Date().toISOString().split("T")[0],
-    };
-
-    setBeneficiaries([...beneficiaries, newBeneficiary]);
-    setUsername("");
-    setIsModalVisible(false);
-  };
-
-  const handleSendMoney = () => {
-    // implement the actual money sending logic Here later "API
-    console.log(`Sending ${amount} to ${selectedBeneficiary.name}`);
-    setAmount("0");
-    setSelectedBeneficiary(null);
-    setIsSendModalVisible(false);
-  };
-
-  const handleIncrement = () => {
-    const currentAmount = parseFloat(amount) || 0;
-    setAmount((currentAmount + 1).toString());
-  };
-
-  const handleDecrement = () => {
-    const currentAmount = parseFloat(amount) || 0;
-    if (currentAmount > 0) {
-      setAmount((currentAmount - 1).toString());
+    try {
+      const token = await getToken();
+      if (token) {
+        const decodedToken = jwtDecode(token);
+        const userId = decodedToken.userId;
+        const familyInfo = {
+          fullName: username,
+        };
+        await addFamily(userId, familyInfo);
+        await fetchFamilyMembers();
+        setUsername("");
+        setIsModalVisible(false);
+      }
+    } catch (error) {
+      console.error("Error adding family member:", error);
     }
   };
 
-  const handleAmountChange = (text) => {
-    setAmount(text);
-  };
-
-  const handleDelete = () => {
-    if (selectedBeneficiary) {
-      const updatedBeneficiaries = beneficiaries.filter(
-        (b) => b.id !== selectedBeneficiary.id
-      );
-      setBeneficiaries(updatedBeneficiaries);
-      setSelectedBeneficiary(null);
-      setIsDeleteModalVisible(false);
-    }
-  };
-
-  const filteredBeneficiaries = beneficiaries.filter((beneficiary) =>
-    beneficiary.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredBeneficiaries = familyMembers.filter((beneficiary) =>
+    beneficiary.fullName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const renderBeneficiary = ({ item }) => (
-    <View style={styles.beneficiaryCard}>
+    <TouchableOpacity
+      style={styles.beneficiaryCard}
+      onPress={() => navigation.navigate("FamilyTieDetails", { member: item })}
+    >
       <View style={styles.beneficiaryMainContent}>
-        <LetterAvatar name={item.name} />
+        <LetterAvatar name={item?.fullName} />
         <View style={styles.beneficiaryInfo}>
-          <Text style={styles.beneficiaryName}>{item.name}</Text>
+          <Text style={styles.beneficiaryName}>
+            {item?.fullName || "Unknown"}
+          </Text>
         </View>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => {
-            setSelectedBeneficiary(item);
-            setIsDeleteModalVisible(true);
-          }}
-        >
-          <Ionicons name="trash-outline" size={20} color="#FF4F6D" />
-        </TouchableOpacity>
+        <Ionicons
+          name="chevron-forward"
+          size={24}
+          color="#9991b1"
+          style={styles.chevronIcon}
+        />
       </View>
-      <View style={styles.actionButtons}>
-        <TouchableOpacity
-          style={styles.sendButton}
-          onPress={() => {
-            setSelectedBeneficiary(item);
-            setIsSendModalVisible(true);
-          }}
-        >
-          <Ionicons name="arrow-forward-circle" size={24} color="#fff" />
-          <Text style={styles.sendButtonText}>Send Money</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </TouchableOpacity>
   );
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -150,6 +142,8 @@ const FamilyTies = () => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Family Ties</Text>
       </View>
+
+      {/* Search Bar */}
 
       <View style={styles.searchContainer}>
         <Ionicons
@@ -167,15 +161,27 @@ const FamilyTies = () => {
         />
       </View>
 
-      <FlatList
-        data={filteredBeneficiaries}
-        renderItem={renderBeneficiary}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        style={styles.list}
-      />
+      {/* Family Members List */}
 
-      {/* Add Beneficiary Modal */}
+      {familyMembers.length === 0 && !isLoading ? (
+        <View style={styles.emptyStateContainer}>
+          <Ionicons name="people-outline" size={48} color="#9991b1" />
+          <Text style={styles.emptyMessage}>No Family Ties Yet</Text>
+          <Text style={styles.emptySubMessage}>
+            Add your family members to get started
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredBeneficiaries}
+          renderItem={renderBeneficiary}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+          style={styles.list}
+        />
+      )}
+
+      {/* Add Beneficiary contant */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -208,7 +214,7 @@ const FamilyTies = () => {
               onPress={handleAddBeneficiary}
               disabled={!username.trim()}
             >
-              <Text style={styles.confirmButtonText}>Next</Text>
+              <Text style={styles.confirmButtonText}>Add Family Member</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -224,93 +230,7 @@ const FamilyTies = () => {
         </View>
       </Modal>
 
-      {/* Send Money Modal */}
-
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={isSendModalVisible}
-        onRequestClose={() => setIsSendModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Send Money</Text>
-            <Text style={styles.modalSubtitle}>
-              Enter the amount you want to send to {selectedBeneficiary?.name}
-            </Text>
-
-            <TextInput
-              style={styles.amountInput}
-              value={amount}
-              onChangeText={handleAmountChange}
-              keyboardType="numeric"
-              placeholder="0.0"
-              placeholderTextColor="#999"
-            />
-
-            <TouchableOpacity
-              style={[
-                styles.confirmButton,
-                (!amount.trim() || parseFloat(amount) === 0) &&
-                  styles.confirmButtonDisabled,
-              ]}
-              onPress={handleSendMoney}
-              disabled={!amount.trim() || parseFloat(amount) === 0}
-            >
-              <Text style={styles.confirmButtonText}>Send KD {amount}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => {
-                setAmount("0");
-                setSelectedBeneficiary(null);
-                setIsSendModalVisible(false);
-              }}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Delete Beneficiary Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={isDeleteModalVisible}
-        onRequestClose={() => setIsDeleteModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Delete Beneficiary</Text>
-            <Text style={styles.modalSubtitle}>
-              Are you sure you want to delete {selectedBeneficiary?.name} from
-              your Family Ties? This action cannot be undone.
-            </Text>
-
-            <TouchableOpacity
-              style={[styles.confirmButton, { backgroundColor: "#FF4F6D" }]}
-              onPress={handleDelete}
-            >
-              <Text style={styles.confirmButtonText}>Delete</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => {
-                setSelectedBeneficiary(null);
-                setIsDeleteModalVisible(false);
-              }}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Add Beneficiary Button */}
-
+      {/* Add Family Member Button */}
       <TouchableOpacity
         style={styles.addButton}
         onPress={() => setIsModalVisible(true)}
@@ -324,25 +244,14 @@ const FamilyTies = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1f1d35",
+    backgroundColor: "#141E30",
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
+    padding: 20,
     paddingTop: 60,
-    paddingBottom: 16,
-    backgroundColor: "#1f1d35",
+    backgroundColor: "#141E30",
     borderBottomWidth: 1,
-    borderBottomColor: "#2a2844",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    borderBottomColor: "rgba(255, 255, 255, 0.05)",
     justifyContent: "center",
   },
   backButton: {
@@ -355,24 +264,19 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: "800",
-    color: "#fff",
+    color: "#E8F0FE",
     letterSpacing: 0.5,
+    textAlign: "center",
   },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2a2844",
+    backgroundColor: "rgba(167, 139, 250, 0.05)",
     margin: 16,
     borderRadius: 16,
     paddingHorizontal: 16,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
   },
   searchIcon: {
     marginRight: 12,
@@ -381,7 +285,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     height: 50,
-    color: "#fff",
+    color: "#E8F0FE",
     fontSize: 16,
   },
   listContainer: {
@@ -392,94 +296,74 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   beneficiaryCard: {
-    backgroundColor: "#2a2844",
+    backgroundColor: "rgba(167, 139, 250, 0.05)",
     borderRadius: 20,
     padding: 16,
     marginBottom: 12,
-    shadowColor: "#000",
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
+    shadowColor: "#A78BFA",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 4,
   },
   beneficiaryMainContent: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 65,
+    height: 65,
+    borderRadius: 32.5,
+    backgroundColor: "rgba(167, 139, 250, 0.1)",
     justifyContent: "center",
     alignItems: "center",
+    marginBottom: 8,
+    borderWidth: 2,
+    borderColor: "#A78BFA",
+    shadowColor: "#A78BFA",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   avatarText: {
-    color: "#FFFFFF",
+    color: "#A78BFA",
     fontSize: 20,
-    fontWeight: "bold",
+    fontWeight: "700",
   },
   beneficiaryInfo: {
     marginLeft: 16,
     flex: 1,
   },
   beneficiaryName: {
-    color: "#fff",
+    color: "#E8F0FE",
     fontSize: 18,
     fontWeight: "700",
-    marginBottom: 4,
+    letterSpacing: 0.5,
   },
-  deleteButton: {
-    padding: 8,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#2a2844",
-  },
-  actionButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    borderTopWidth: 1,
-    borderTopColor: "#383454",
-    paddingTop: 12,
-  },
-  sendButton: {
-    backgroundColor: "#FF4F6D",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    shadowColor: "#FF4F6D",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  sendButtonText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 16,
+  chevronIcon: {
+    color: "#A78BFA",
+    opacity: 0.8,
   },
   addButton: {
     position: "absolute",
     bottom: 100,
     right: 24,
-    backgroundColor: "#448AFF",
+    backgroundColor: "rgba(255, 79, 142, 0.8)",
     width: 60,
     height: 60,
     borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#448AFF",
+    shadowColor: "#FF4F8E",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -487,67 +371,71 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+    borderStyle: "dashed",
+    borderWidth: 2,
+    borderColor: "rgba(255, 79, 142, 0.4)",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    backgroundColor: "rgba(20, 30, 48, 0.95)",
     justifyContent: "flex-start",
     alignItems: "center",
-    paddingTop: "30%",
+    paddingTop: Platform.OS === "ios" ? 120 : 100,
   },
   modalContent: {
-    backgroundColor: "#1f1d35",
+    backgroundColor: "#1A2942",
     borderRadius: 24,
     padding: 32,
-    width: "85%",
+    width: "90%",
     alignItems: "center",
-    shadowColor: "#000",
+    borderWidth: 1,
+    borderColor: "rgba(255, 79, 142, 0.4)",
+    shadowColor: "#FF4F8E",
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 8,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 16,
     maxWidth: 400,
-    maxHeight: "80%",
+    marginTop: 40,
   },
   modalTitle: {
     fontSize: 28,
     fontWeight: "800",
-    color: "#fff",
+    color: "#E8F0FE",
     textAlign: "center",
     marginBottom: 16,
-    letterSpacing: -0.5,
+    letterSpacing: 0.5,
   },
   modalSubtitle: {
     fontSize: 16,
-    color: "#9991b1",
+    color: "rgba(232, 240, 254, 0.7)",
     textAlign: "center",
     marginBottom: 32,
     lineHeight: 24,
     paddingHorizontal: 16,
-    maxWidth: 300,
   },
   modalInput: {
     width: "100%",
     height: 56,
     borderWidth: 1.5,
-    borderColor: "#383454",
+    borderColor: "rgba(255, 79, 142, 0.4)",
     borderRadius: 16,
     paddingHorizontal: 20,
     fontSize: 17,
     marginBottom: 32,
-    color: "#fff",
-    backgroundColor: "#2a2844",
+    color: "#E8F0FE",
+    backgroundColor: "rgba(255, 79, 142, 0.1)",
   },
   confirmButton: {
     width: "100%",
-    backgroundColor: "#FF4F6D",
+    backgroundColor: "#FF4F8E",
     padding: 18,
     borderRadius: 16,
     marginBottom: 16,
-    shadowColor: "#FF4F6D",
+    shadowColor: "#FF4F8E",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -557,11 +445,11 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   confirmButtonDisabled: {
-    backgroundColor: "#ffb3c1",
+    backgroundColor: "rgba(255, 79, 142, 0.5)",
     shadowOpacity: 0.1,
   },
   confirmButtonText: {
-    color: "#fff",
+    color: "#E8F0FE",
     fontSize: 18,
     fontWeight: "700",
     textAlign: "center",
@@ -573,24 +461,39 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   cancelButtonText: {
-    color: "#9991b1",
+    color: "rgba(232, 240, 254, 0.6)",
     fontSize: 16,
     fontWeight: "600",
     textAlign: "center",
   },
-  amountInput: {
-    width: "100%",
-    height: 56,
-    borderWidth: 1.5,
-    borderColor: "#383454",
-    borderRadius: 16,
-    paddingHorizontal: 20,
-    fontSize: 24,
-    marginBottom: 32,
-    color: "#fff",
-    backgroundColor: "#2a2844",
+  centerContent: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    color: "#E8F0FE",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  emptyMessage: {
+    color: "#E8F0FE",
+    fontSize: 20,
+    fontWeight: "700",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubMessage: {
+    color: "#A78BFA",
+    fontSize: 16,
     textAlign: "center",
-    fontWeight: "bold",
+    lineHeight: 24,
+    opacity: 0.8,
   },
 });
 

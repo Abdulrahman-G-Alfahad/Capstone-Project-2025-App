@@ -36,15 +36,31 @@ const Avatar = ({ source, name, size = 120, style }) => {
 const styles = StyleSheet.create({
   image: {
     backgroundColor: "rgba(167, 139, 250, 0.1)",
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: "#A78BFA",
+    shadowColor: "#A78BFA",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   avatarContainer: {
     backgroundColor: "rgba(167, 139, 250, 0.1)",
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: "#A78BFA",
     justifyContent: "center",
     alignItems: "center",
+    shadowColor: "#A78BFA",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   avatarText: {
     color: "#A78BFA",
