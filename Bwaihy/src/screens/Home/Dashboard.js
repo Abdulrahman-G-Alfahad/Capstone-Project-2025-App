@@ -1,4 +1,4 @@
-import React, { use, useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   TextInput,
   Modal,
   Button,
+  Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import {
@@ -72,6 +73,9 @@ const Dashboard = () => {
   const [fullName, setFullName] = useState("");
   const [walletBalance, setWalletBalance] = useState("");
   const [faceId, setFaceId] = useState("");
+  const [isAddMoneyModalVisible, setIsAddMoneyModalVisible] = useState(false);
+  const [isSendMoneyModalVisible, setIsSendMoneyModalVisible] = useState(false);
+  const [isBalanceHidden, setIsBalanceHidden] = useState(false);
 
   useEffect(() => {
     const fetchProfileAndFamily = async () => {
@@ -176,6 +180,19 @@ const Dashboard = () => {
     );
   };
 
+  const formatBalance = (balance) => {
+    if (!profile) return "0";
+    if (isBalanceHidden) return "••••••";
+    return balance.toLocaleString();
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
+
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -206,45 +223,72 @@ const Dashboard = () => {
       <View style={styles.container}>
         {/* The header contain the logo and the User Greeting */}
         <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <View style={styles.logo}>
-              <Text style={styles.logoText}>LOGO</Text>
-            </View>
-          </View>
           <View style={styles.greetingRow}>
-            <Text style={styles.greeting}>
-              Welcome, {profile ? profile.fullName : "User"} !
+            <Text style={styles.logoText}>
+              <Text style={styles.logoBold}>F</Text>
+              ace<Text style={styles.logoBold}>B</Text>ouk
             </Text>
-
-            {/* Profile Icon Navigation */}
             <TouchableOpacity
               style={styles.profileIcon}
               onPress={() => navigation.navigate("Profile")}
             >
-              <Ionicons name="person-circle-outline" size={32} color="#fff" />
+              <Ionicons name="person" size={20} color="#A78BFA" />
             </TouchableOpacity>
+          </View>
+          <View style={styles.greetingContainer}>
+            <Text style={styles.greetingTime}>{getGreeting()}</Text>
+            <Text style={styles.greeting}>
+              {profile ? profile.fullName.split(" ")[0] : "User"} 👋
+            </Text>
           </View>
         </View>
 
         {/* Dashboard Main Content */}
-        <View style={styles.mainContent}>
-          {/* The Available Balance Card */}
+        <ScrollView
+          style={styles.mainContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Balance Card */}
           <View style={styles.balanceCard}>
-            <Text style={styles.balanceLabel}>Available Balance</Text>
-            <Text style={styles.balanceAmount}>
-              {profile ? profile.walletBalance.toLocaleString() : "0"} KD
-            </Text>
+            <View style={styles.balanceHeader}>
+              <View>
+                <Text style={styles.balanceLabel}>Total Balance</Text>
+                <View style={styles.balanceRow}>
+                  <Text style={styles.balanceAmount}>
+                    {formatBalance(profile?.walletBalance)} KD
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.visibilityButton}
+                    onPress={() => setIsBalanceHidden(!isBalanceHidden)}
+                  >
+                    <Ionicons
+                      name={isBalanceHidden ? "eye-off-outline" : "eye-outline"}
+                      size={24}
+                      color="#9991b1"
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
 
-            {/* Add / Send Buttons Componants */}
             <View style={styles.balanceActions}>
-              <AddMoneyButton onSuccess={setProfile} />
+              <AddMoneyButton
+                onSuccess={(updatedProfile) => setProfile(updatedProfile)}
+              />
               <SendMoneyButton />
             </View>
           </View>
 
-          {/* The Family Ties Section */}
+          {/* Family Ties Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Family Ties</Text>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Family Ties</Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("FamilyTies")}
+              >
+                <Text style={styles.seeAllText}>See All</Text>
+              </TouchableOpacity>
+            </View>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -258,7 +302,7 @@ const Dashboard = () => {
                   <View style={[styles.avatar, styles.addAvatar]}>
                     <Ionicons name="add" size={24} color="#fff" />
                   </View>
-                  <Text style={styles.addFamilyTiesButtonText}>Add</Text>
+                  <Text style={styles.addFamilyTiesButtonText}>Add New</Text>
                 </TouchableOpacity>
                 {familyMembers.length > 0 ? (
                   familyMembers.map((member, index) =>
@@ -267,7 +311,7 @@ const Dashboard = () => {
                 ) : (
                   <View style={styles.emptyMessageWrapper}>
                     <Text style={styles.emptyMessage}>
-                      No family members found.
+                      Add your family members to get started
                     </Text>
                   </View>
                 )}
@@ -275,33 +319,68 @@ const Dashboard = () => {
             </ScrollView>
           </View>
 
-          {/* Add Family Ties Modal */}
-          <AddFamilyTies
-            modalVisible={modalVisible}
-            setModalVisible={setModalVisible}
-            onFamilyMemberAdded={handleFamilyMemberAdded}
-          />
-
-          {/* The Transactions Section */}
+          {/* Transactions Section */}
           <View style={styles.section}>
-            <TouchableOpacity
-              onPress={() => navigation.navigate("Transactions")}
-            >
-              <Text style={styles.sectionTitle}>Transactions</Text>
-            </TouchableOpacity>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Recent Transactions</Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("Transactions")}
+              >
+                <Text style={styles.seeAllText}>View All</Text>
+              </TouchableOpacity>
+            </View>
             <View style={styles.transactionsContainer}>
               {profile && profile.transactionHistory.length > 0 ? (
                 limitedTransactions.map(({ date, tx }) =>
                   renderTransactionSection(date, [tx])
                 )
               ) : (
-                <Text style={styles.emptyMessage}>
-                  You have no transactions.
-                </Text>
+                <View style={styles.emptyStateContainer}>
+                  <Ionicons name="receipt-outline" size={48} color="#9991b1" />
+                  <Text style={styles.emptyMessage}>No transactions yet</Text>
+                  <Text style={styles.emptySubMessage}>
+                    Your transactions will appear here
+                  </Text>
+                </View>
               )}
             </View>
           </View>
-        </View>
+
+          {/* Quick Actions */}
+          <View style={styles.quickActionsContainer}>
+            <TouchableOpacity
+              style={styles.quickActionButton}
+              onPress={() => navigation.navigate("QRCode")}
+            >
+              <View
+                style={[styles.quickActionIcon, { backgroundColor: "#6C63FF" }]}
+              >
+                <Ionicons name="qr-code-outline" size={28} color="#fff" />
+              </View>
+              <Text style={styles.quickActionText}>Scan QR</Text>
+              <Text style={styles.quickActionSubText}>Pay with QR code</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.quickActionButton}
+              onPress={() => navigation.navigate("Promotions")}
+            >
+              <View
+                style={[styles.quickActionIcon, { backgroundColor: "#FF6B6B" }]}
+              >
+                <Ionicons name="gift-outline" size={28} color="#fff" />
+              </View>
+              <Text style={styles.quickActionText}>Promotions</Text>
+              <Text style={styles.quickActionSubText}>View offers</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+
+        {/* Add Family Ties Modal */}
+        <AddFamilyTies
+          modalVisible={modalVisible}
+          setModalVisible={setModalVisible}
+          onFamilyMemberAdded={handleFamilyMemberAdded}
+        />
       </View>
     </SafeAreaView>
   );
@@ -310,157 +389,214 @@ const Dashboard = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#1f1d35",
+    backgroundColor: "#141E30",
+    paddingTop: Platform.OS === "ios" ? 0 : 0,
   },
   container: {
     flex: 1,
-    backgroundColor: "#1f1d35",
+    backgroundColor: "#141E30",
   },
   header: {
-    padding: 16,
-    paddingTop: 2,
+    padding: 20,
+    paddingTop: 6,
+    backgroundColor: "#141E30",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.05)",
   },
   mainContent: {
     flex: 1,
-    paddingHorizontal: 16,
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 5,
-  },
-  logo: {
-    width: 60,
-    height: 60,
-    borderRadius: 10,
-    backgroundColor: "#2a2844",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  logoText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    paddingHorizontal: 20,
   },
   greetingRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: -4,
-    marginLeft: 8,
+    marginBottom: 12,
+  },
+  logoText: {
+    color: "#E8F0FE",
+    fontSize: 32,
+    fontWeight: "400",
+    fontFamily: Platform.OS === "ios" ? "Helvetica Neue" : "sans-serif",
+  },
+  logoBold: {
+    fontWeight: "700",
+  },
+  greetingContainer: {
+    marginTop: 4,
+  },
+  greetingTime: {
+    fontSize: 16,
+    color: "#A78BFA",
+    marginBottom: 4,
+    letterSpacing: 0.5,
+    fontWeight: "500",
   },
   greeting: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#E8F0FE",
+    letterSpacing: 0.5,
   },
   profileIcon: {
-    padding: 4,
-  },
-  balanceCard: {
-    backgroundColor: "#2a2844",
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
-  },
-  balanceLabel: {
-    color: "#9991b1",
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  balanceAmount: {
-    color: "#fff",
-    fontSize: 30,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  balanceActions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 16,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: "row",
+    padding: 8,
+    backgroundColor: "rgba(167, 139, 250, 0.08)",
+    borderRadius: 50,
+    width: 40,
+    height: 40,
+    borderWidth: 1.5,
+    borderColor: "#A78BFA",
+    shadowColor: "#A78BFA",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
     alignItems: "center",
     justifyContent: "center",
-    padding: 12,
-    borderRadius: 12,
-    gap: 8,
   },
-  addButton: {
-    backgroundColor: "#FF4F6D",
-    fontWeight: "700",
+  balanceCard: {
+    backgroundColor: "rgba(167, 139, 250, 0.05)",
+    borderRadius: 24,
+    padding: 24,
+    marginVertical: 16,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
+    shadowColor: "#A78BFA",
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 8,
   },
-  addFamilyButton: {
+  balanceHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    fontWeight: "700",
+    marginBottom: 24,
   },
-  sendButton: {
-    backgroundColor: "#5066C0",
-    fontWeight: "700",
+  balanceLabel: {
+    color: "#A78BFA",
+    fontSize: 18,
+    marginBottom: 8,
+    fontWeight: "600",
+    letterSpacing: 0.5,
   },
-  actionButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
+  balanceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  visibilityButton: {
+    padding: 8,
+    backgroundColor: "rgba(167, 139, 250, 0.1)",
+    borderRadius: 50,
+    width: 40,
+    height: 40,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  balanceAmount: {
+    color: "#E8F0FE",
+    fontSize: 40,
+    fontWeight: "800",
+    fontFamily: Platform.OS === "ios" ? "Helvetica Neue" : "sans-serif",
+    letterSpacing: 0.5,
+    textShadowColor: "rgba(167, 139, 250, 0.3)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 24,
+  },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 12,
-    // marginLeft: 3,
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#E8F0FE",
+    letterSpacing: 0.5,
+  },
+  seeAllText: {
+    color: "#A78BFA",
+    fontSize: 15,
+    fontWeight: "600",
   },
   familyTiesScrollView: {
-    maxHeight: 100,
+    maxHeight: 120,
   },
   familyTiesContainer: {
     flexDirection: "row",
-    gap: 16,
+    gap: 20,
     paddingHorizontal: 8,
-    justifyContent: "center",
+    paddingVertical: 8,
   },
   familyMember: {
     alignItems: "center",
+    width: 75,
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#5066C0",
+    width: 65,
+    height: 65,
+    borderRadius: 32.5,
+    backgroundColor: "rgba(167, 139, 250, 0.1)",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
+    borderWidth: 2,
+    borderColor: "#A78BFA",
+    shadowColor: "#A78BFA",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   addAvatar: {
-    backgroundColor: "#2a2844",
+    backgroundColor: "rgba(167, 139, 250, 0.05)",
+    borderStyle: "dashed",
+    borderWidth: 2,
+    borderColor: "rgba(167, 139, 250, 0.4)",
   },
   avatarText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
+    color: "#A78BFA",
+    fontSize: 20,
+    fontWeight: "700",
   },
   familyMemberName: {
-    color: "#fff",
-    fontSize: 12,
+    color: "#E8F0FE",
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
   },
   transactionsContainer: {
-    backgroundColor: "#2a2844",
-    borderRadius: 20,
-    padding: 12,
+    backgroundColor: "rgba(167, 139, 250, 0.05)",
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
   },
   transactionItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 16,
   },
   transactionBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: "#1f1d35",
+    borderBottomColor: "rgba(167, 139, 250, 0.1)",
   },
   transactionLeft: {
     flexDirection: "row",
@@ -468,120 +604,152 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   transactionIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 50,
+    height: 50,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
+    backgroundColor: "rgba(167, 139, 250, 0.1)",
   },
   transactionInfo: {
     flex: 1,
   },
   businessName: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
+    color: "#E8F0FE",
+    fontSize: 17,
+    fontWeight: "700",
+    marginBottom: 4,
   },
   businessType: {
-    color: "#9991b1",
-    fontSize: 12,
+    color: "#A78BFA",
+    fontSize: 14,
+    marginBottom: 2,
+    fontWeight: "500",
   },
   transactionTime: {
-    color: "#9991b1",
+    color: "#A78BFA",
     fontSize: 12,
+    fontWeight: "500",
+    opacity: 0.8,
   },
   transactionRight: {
     alignItems: "flex-end",
   },
   transactionAmount: {
-    color: "#fff",
+    color: "#E8F0FE",
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "700",
     marginRight: 10,
   },
-  promotionCard: {
-    backgroundColor: "#FF8A65",
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 16,
-  },
-  promotionContent: {
+  emptyStateContainer: {
     alignItems: "center",
-  },
-  promotionLogo: {
-    width: 36,
-    height: 36,
-    marginBottom: 8,
-  },
-  promotionText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  promotionSubtext: {
-    color: "#fff",
-    fontSize: 12,
-  },
-  seeMoreButton: {
-    alignItems: "center",
-    marginLeft: 8,
-  },
-  seeMoreAvatar: {
-    backgroundColor: "#2a2844",
-  },
-  emptyMessageWrapper: {
-    height: 80,
-    justifyContent: "center",
-    marginLeft: 16,
+    padding: 32,
   },
   emptyMessage: {
-    color: "#9991b1",
+    color: "#A78BFA",
+    fontSize: 17,
+    marginTop: 16,
+    marginBottom: 4,
+    fontWeight: "600",
+  },
+  emptySubMessage: {
+    color: "#A78BFA",
+    fontSize: 14,
+    fontWeight: "500",
+    opacity: 0.8,
+  },
+  quickActionsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 32,
+    gap: 16,
+  },
+  quickActionButton: {
+    flex: 1,
+    alignItems: "center",
+    backgroundColor: "rgba(167, 139, 250, 0.05)",
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
+  },
+  quickActionIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+    backgroundColor: "rgba(167, 139, 250, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
+  },
+  quickActionText: {
+    color: "#E8F0FE",
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  quickActionSubText: {
+    color: "#A78BFA",
+    fontSize: 14,
+    fontWeight: "500",
+    opacity: 0.8,
+  },
+  balanceActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 16,
+    marginTop: 12,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    borderRadius: 16,
+    gap: 8,
+    backgroundColor: "rgba(167, 139, 250, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
+  },
+  addButton: {
+    backgroundColor: "#A78BFA",
+  },
+  sendButton: {
+    backgroundColor: "#FF6B6B",
+  },
+  actionButtonText: {
+    color: "#E8F0FE",
     fontSize: 16,
-    textAlign: "left",
-  },
-  loadingText: {
-    color: "#fff",
-    fontSize: 18,
-    textAlign: "center",
-    marginTop: 20,
-  },
-  errorText: {
-    color: "#ff4f6d",
-    fontSize: 18,
-    textAlign: "center",
-    marginTop: 20,
-  },
-  sectionHeader: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginVertical: 10,
+    fontWeight: "700",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(31, 29, 53, 0.95)",
+    backgroundColor: "rgba(20, 30, 48, 0.95)",
     justifyContent: "center",
     alignItems: "center",
   },
   modalView: {
-    backgroundColor: "#2a2844",
+    backgroundColor: "#1A2942",
     borderRadius: 24,
     padding: 32,
     width: "90%",
     alignItems: "center",
-    shadowColor: "#000",
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
+    shadowColor: "#A78BFA",
     shadowOffset: {
       width: 0,
       height: 8,
     },
-    shadowOpacity: 0.44,
-    shadowRadius: 10.32,
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
     elevation: 16,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
-    position: "relative",
   },
   modalHeader: {
     width: "100%",
@@ -591,11 +759,9 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 28,
     fontWeight: "800",
-    color: "#fff",
+    color: "#E8F0FE",
     textAlign: "center",
-    textShadowColor: "rgba(255, 79, 109, 0.3)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    letterSpacing: 0.5,
   },
   modalContent: {
     width: "100%",
@@ -605,42 +771,31 @@ const styles = StyleSheet.create({
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(31, 29, 53, 0.95)",
+    backgroundColor: "rgba(167, 139, 250, 0.05)",
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: "rgba(167, 139, 250, 0.2)",
   },
   modalInput: {
     flex: 1,
-    color: "#fff",
+    color: "#E8F0FE",
     fontSize: 16,
     marginLeft: 10,
   },
   modalButton: {
     width: "100%",
-    backgroundColor: "#FF4F6D",
+    backgroundColor: "#A78BFA",
     padding: 18,
     borderRadius: 16,
     marginBottom: 16,
-    shadowColor: "#FF4F6D",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 5.46,
-    elevation: 9,
   },
   modalButtonText: {
-    color: "#fff",
+    color: "#141E30",
     fontSize: 18,
     fontWeight: "700",
     textAlign: "center",
-    textShadowColor: "rgba(0, 0, 0, 0.25)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
   },
   closeButton: {
     position: "absolute",
@@ -650,10 +805,14 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   addFamilyTiesButtonText: {
-    color: "#fff",
-    fontSize: 12,
+    color: "#E8F0FE",
+    fontSize: 13,
     fontWeight: "600",
     textAlign: "center",
+  },
+  emptyMessageWrapper: {
+    alignItems: "center",
+    padding: 24,
   },
 });
 

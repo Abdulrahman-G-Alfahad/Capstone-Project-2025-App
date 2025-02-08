@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import BusinessIcon from "../../components/BusinessIcon";
+import Avatar from "../../components/Avatar";
 import moment from "moment";
 import businesses from "../../data/businessesData";
 
@@ -79,15 +80,12 @@ const FamilyTieDetails = ({ route, navigation }) => {
 
         {/* Tie Card */}
         <View style={styles.memberCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {member.fullName
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase()}
-            </Text>
-          </View>
+          <Avatar
+            source={member.photo}
+            name={member.fullName}
+            size={80}
+            style={styles.avatar}
+          />
           <Text style={styles.memberName}>{member.fullName}</Text>
           <Text style={styles.transactionDate}>
             Transaction on {moment().format("MMMM D, YYYY")}
@@ -281,18 +279,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#5066C0",
-    justifyContent: "center",
-    alignItems: "center",
     marginBottom: 16,
-  },
-  avatarText: {
-    color: "#fff",
-    fontSize: 32,
-    fontWeight: "bold",
+    backgroundColor: "#5066C0",
+    borderColor: "#5066C0",
   },
   memberName: {
     color: "#fff",

@@ -5,11 +5,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
-  Switch,
-  Animated,
   TextInput,
   Alert,
+  Platform,
+  SafeAreaView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,17 +18,19 @@ import UserContext from "../../context/UserContext";
 import { useQuery } from "@tanstack/react-query";
 import { getProfile } from "../../api/auth";
 import { jwtDecode } from "jwt-decode";
+import Avatar from "../../components/Avatar";
 
 const Profile = () => {
   const navigation = useNavigation();
-  const [isFaceIdEnabled, setIsFaceIdEnabled] = useState(true);
-  const [isPrivacyEnabled, setIsPrivacyEnabled] = useState(false);
-  const [lockAnimation] = useState(new Animated.Value(0));
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
   const [photo, setPhoto] = useState("");
+  const [civilId, setCivilId] = useState("");
+  const [bankAccount, setBankAccount] = useState("");
+  const [pinCode, setPinCode] = useState("");
+  const [showPin, setShowPin] = useState(false);
 
   const { user, setUser } = useContext(UserContext);
 
@@ -45,7 +46,12 @@ const Profile = () => {
     throw new Error("No token found");
   };
 
-  const { data: profile, isLoading, isError, error } = useQuery({
+  const {
+    data: profile,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ["user", user],
     queryFn: fetchProfile,
   });
@@ -56,27 +62,11 @@ const Profile = () => {
       setPhoneNumber(profile.user.phoneNumber);
       setEmail(profile.user.email);
       setPhoto(profile.user.photo);
+      setCivilId(profile.user.civilId || "");
+      setBankAccount(profile.user.bankAccount || "");
+      setPinCode(profile.user.pinCode || "");
     }
   }, [profile]);
-
-  const toggleFaceId = () => {
-    setIsFaceIdEnabled((previousState) => !previousState);
-  };
-
-  const togglePrivacy = () => {
-    setIsPrivacyEnabled((previousState) => !previousState);
-    Animated.spring(lockAnimation, {
-      toValue: !isPrivacyEnabled ? 1 : 0,
-      useNativeDriver: true,
-      friction: 8,
-      tension: 40,
-    }).start();
-  };
-
-  const lockRotation = lockAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
 
   const handleSave = () => {
     setIsEditing(false);
@@ -97,6 +87,9 @@ const Profile = () => {
       setPhoneNumber(profile.phoneNumber);
       setEmail(profile.email);
       setPhoto(profile.photo);
+      setCivilId(profile.civilId || "");
+      setBankAccount(profile.bankAccount || "");
+      setPinCode(profile.pinCode || "");
     }
     setIsEditing(false);
   };
@@ -143,286 +136,315 @@ const Profile = () => {
   if (isError) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>Error loading profile: {error.message}</Text>
+        <Text style={styles.errorText}>
+          Error loading profile: {error.message}
+        </Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="chevron-back-outline" size={28} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile</Text>
-
-        {/* edit and cancel buttons */}
-        {isEditing ? (
-          <View style={styles.editButtonsContainer}>
-            <TouchableOpacity
-              style={styles.editActionButton}
-              onPress={handleCancel}
-            >
-              <Ionicons name="close-outline" size={24} color="#FF4F6D" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.editActionButton}
-              onPress={handleEdit}
-            >
-              <Ionicons name="checkmark-outline" size={24} color="#fff" />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-            <Ionicons name="create-outline" size={24} color="#fff" />
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <Ionicons name="chevron-back-outline" size={28} color="#A78BFA" />
           </TouchableOpacity>
-        )}
-      </View>
+          <Text style={styles.headerTitle}>Profile</Text>
 
-      {/* Profile Content */}
-      <View style={styles.content}>
-        {/* Profile Picture Section */}
-        <View style={styles.profileImageContainer}>
-          <Image source={{ uri: photo }} style={styles.profileImage} />
-          {isEditing && (
-            <TouchableOpacity
-              style={styles.editImageButton}
-              onPress={pickImage}
-            >
-              <Ionicons name="camera" size={24} color="#6B5CE7" />
+          {/* edit and cancel buttons */}
+          {isEditing ? (
+            <View style={styles.editButtonsContainer}>
+              <TouchableOpacity
+                style={styles.editActionButton}
+                onPress={handleCancel}
+              >
+                <Ionicons name="close-outline" size={24} color="#FF4F6D" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.editActionButton}
+                onPress={handleEdit}
+              >
+                <Ionicons name="checkmark-outline" size={24} color="#A78BFA" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+              <Ionicons name="create-outline" size={24} color="#A78BFA" />
             </TouchableOpacity>
           )}
         </View>
 
-        {isEditing ? (
-          <View style={styles.nameEditContainer}>
-            <TextInput
-              style={[styles.userName, styles.input]}
-              value={name}
-              onChangeText={setName}
-              placeholder="Enter your name"
-              placeholderTextColor="#8e8ba7"
-            />
-            <Ionicons
-              name="pencil"
-              size={20}
-              color="#8e8ba7"
-              style={styles.nameEditIcon}
-            />
-          </View>
-        ) : (
-          <Text style={styles.userName}>{name}</Text>
-        )}
-
-        {/* User Details Section */}
-        <View style={styles.detailsContainer}>
-          <Text style={styles.sectionLabel}>Email</Text>
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={24} color="#8e8ba7" />
-            {isEditing ? (
-              <TextInput
-                style={[styles.inputText, styles.input]}
-                value={email}
-                onChangeText={setEmail}
-              />
-            ) : (
-              <Text style={styles.inputText}>{email}</Text>
+        {/* Profile Content */}
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Profile Picture Section */}
+          <View style={styles.profileImageContainer}>
+            <Avatar source={photo} name={name} size={120} />
+            {isEditing && (
+              <TouchableOpacity
+                style={styles.editImageButton}
+                onPress={pickImage}
+              >
+                <Ionicons name="camera" size={24} color="#A78BFA" />
+              </TouchableOpacity>
             )}
           </View>
 
-          <Text style={styles.sectionLabel}>Phone</Text>
-          <View style={styles.inputContainer}>
-            <Ionicons name="call-outline" size={24} color="#8e8ba7" />
-            {isEditing ? (
+          {isEditing ? (
+            <View style={styles.nameEditContainer}>
               <TextInput
-                style={[styles.inputText, styles.input]}
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                keyboardType="phone-pad"
+                style={[styles.userName, styles.input]}
+                value={name}
+                onChangeText={setName}
+                placeholder="Enter your name"
+                placeholderTextColor="#8e8ba7"
               />
-            ) : (
-              <Text style={styles.inputText}>{phoneNumber}</Text>
-            )}
-          </View>
-
-          <Text style={styles.sectionLabel}>Face ID</Text>
-          <View style={styles.switchContainer}>
-            <View style={styles.switchLeft}>
-              <Ionicons name="scan-outline" size={24} color="#8e8ba7" />
-              <Text style={styles.switchText}>Face ID Authentication</Text>
+              <Ionicons
+                name="pencil"
+                size={20}
+                color="#A78BFA"
+                style={styles.nameEditIcon}
+              />
             </View>
-            <Switch
-              value={isFaceIdEnabled}
-              onValueChange={toggleFaceId}
-              trackColor={{ false: "#767577", true: "#FF4F6D" }}
-              thumbColor={"#f4f3f4"}
-            />
-          </View>
+          ) : (
+            <Text style={styles.userName}>{name}</Text>
+          )}
 
-          <Text style={styles.sectionLabel}>Transactions Privacy</Text>
-          <View style={styles.switchContainer}>
-            <View style={styles.switchLeft}>
-              <Animated.View style={{ transform: [{ rotate: lockRotation }] }}>
-                <Ionicons
-                  name={
-                    isPrivacyEnabled
-                      ? "lock-closed-outline"
-                      : "lock-open-outline"
-                  }
-                  size={24}
-                  color="#8e8ba7"
+          {/* User Details Section */}
+          <View style={styles.detailsContainer}>
+            <Text style={styles.sectionLabel}>Email</Text>
+            <View style={styles.inputContainer}>
+              <Ionicons name="mail-outline" size={24} color="#A78BFA" />
+              {isEditing ? (
+                <TextInput
+                  style={[styles.inputText, styles.input]}
+                  value={email}
+                  onChangeText={setEmail}
                 />
-              </Animated.View>
-              <Text style={styles.switchText}>
-                {isPrivacyEnabled ? "Private" : "Public"}
-              </Text>
+              ) : (
+                <Text style={styles.inputText}>{email}</Text>
+              )}
             </View>
-            <Switch
-              value={isPrivacyEnabled}
-              onValueChange={togglePrivacy}
-              trackColor={{ false: "#767577", true: "#FF4F6D" }}
-              thumbColor={"#f4f3f4"}
-            />
-          </View>
-        </View>
 
-        {/* Buttons */}
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Ionicons name="log-out-outline" size={20} color="#fff" />
-          <Text style={styles.buttonText}>Log Out</Text>
-        </TouchableOpacity>
+            <Text style={styles.sectionLabel}>Phone</Text>
+            <View style={styles.inputContainer}>
+              <Ionicons name="call-outline" size={24} color="#A78BFA" />
+              {isEditing ? (
+                <TextInput
+                  style={[styles.inputText, styles.input]}
+                  value={phoneNumber}
+                  onChangeText={setPhoneNumber}
+                  keyboardType="phone-pad"
+                />
+              ) : (
+                <Text style={styles.inputText}>{phoneNumber}</Text>
+              )}
+            </View>
+
+            <Text style={styles.sectionLabel}>Civil ID</Text>
+            <View style={styles.inputContainer}>
+              <Ionicons name="card-outline" size={24} color="#A78BFA" />
+              {isEditing ? (
+                <TextInput
+                  style={[styles.inputText, styles.input]}
+                  value={civilId}
+                  onChangeText={setCivilId}
+                  keyboardType="numeric"
+                  maxLength={12}
+                  placeholder="Enter your Civil ID"
+                  placeholderTextColor="#8e8ba7"
+                />
+              ) : (
+                <Text style={styles.inputText}>
+                  {civilId || "Not provided"}
+                </Text>
+              )}
+            </View>
+
+            <Text style={styles.sectionLabel}>Bank Account</Text>
+            <View style={styles.inputContainer}>
+              <Ionicons name="wallet-outline" size={24} color="#A78BFA" />
+              {isEditing ? (
+                <TextInput
+                  style={[styles.inputText, styles.input]}
+                  value={bankAccount}
+                  onChangeText={setBankAccount}
+                  keyboardType="numeric"
+                  placeholder="Enter your Bank Account number"
+                  placeholderTextColor="#8e8ba7"
+                />
+              ) : (
+                <Text style={styles.inputText}>
+                  {bankAccount || "Not provided"}
+                </Text>
+              )}
+            </View>
+
+            <Text style={styles.sectionLabel}>PIN Code</Text>
+            <View style={styles.inputContainer}>
+              <Ionicons name="lock-closed-outline" size={24} color="#A78BFA" />
+              {isEditing ? (
+                <View style={styles.pinInputContainer}>
+                  <TextInput
+                    style={[styles.inputText, styles.input, styles.pinInput]}
+                    value={pinCode}
+                    onChangeText={(text) => setPinCode(text.slice(0, 4))}
+                    keyboardType="numeric"
+                    maxLength={4}
+                    secureTextEntry={!showPin}
+                    placeholder="Enter 4-digit PIN"
+                    placeholderTextColor="#8e8ba7"
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPin(!showPin)}
+                    style={styles.showPinButton}
+                  >
+                    <Ionicons
+                      name={showPin ? "eye-off-outline" : "eye-outline"}
+                      size={24}
+                      color="#A78BFA"
+                    />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <Text style={styles.inputText}>
+                  {pinCode ? "••••" : "Not provided"}
+                </Text>
+              )}
+            </View>
+          </View>
+
+          {/* Logout Button */}
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+            <Ionicons name="log-out-outline" size={20} color="#fff" />
+            <Text style={styles.buttonText}>Log Out</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#141E30",
+  },
   container: {
     flex: 1,
-    backgroundColor: "#1f1d35",
+    backgroundColor: "#141E30",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: "#1f1d35",
+    paddingVertical: 16,
+    backgroundColor: "#141E30",
     borderBottomWidth: 1,
-    borderBottomColor: "#2a2844",
-    justifyContent: "center",
+    borderBottomColor: "rgba(167, 139, 250, 0.1)",
+    height: Platform.OS === "ios" ? 60 : 70,
   },
   backButton: {
-    position: "absolute",
-    left: 16,
-    top: 52,
-    padding: 8,
-    zIndex: 1,
-  },
-  headerTitle: {
-    fontSize: 25,
-    fontWeight: "bold",
-    textAlign: "center",
-    color: "#fff",
-  },
-  editButton: {
-    position: "absolute",
-    right: 16,
-    top: 52,
-    padding: 8,
-    zIndex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    padding: 20,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
     alignItems: "center",
   },
-  profileImageContainer: {
-    position: "relative",
-    marginVertical: -3,
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#E8F0FE",
+    textAlign: "center",
+    flex: 1,
   },
-  profileImage: {
-    width: 100,
-    height: 100,
+  editButton: {
+    width: 40,
+    height: 40,
+    backgroundColor: "rgba(167, 139, 250, 0.1)",
     borderRadius: 50,
-    backgroundColor: "#2a2844",
-    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  profileImageContainer: {
+    alignItems: "center",
+    marginVertical: 20,
+    position: "relative",
   },
   editImageButton: {
     position: "absolute",
-    right: -10,
+    right: "30%",
     bottom: 0,
-    backgroundColor: "#fff",
+    backgroundColor: "#E8F0FE",
     padding: 8,
-    borderRadius: 15,
-    elevation: 2,
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#A78BFA",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    elevation: 5,
   },
   userName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 20,
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#E8F0FE",
+    textAlign: "center",
+    marginBottom: 30,
   },
   detailsContainer: {
     width: "100%",
-    marginBottom: 20,
   },
   sectionLabel: {
     fontSize: 16,
-    color: "#8e8ba7",
+    color: "#A78BFA",
     marginBottom: 8,
-    marginTop: 3,
+    marginTop: 16,
+    fontWeight: "600",
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2a2844",
-    borderRadius: 12,
+    backgroundColor: "rgba(167, 139, 250, 0.05)",
+    borderRadius: 16,
     padding: 16,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
   },
   inputText: {
-    color: "#fff",
+    color: "#E8F0FE",
     marginLeft: 12,
     fontSize: 16,
-  },
-  switchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#2a2844",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-  },
-  switchLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  switchText: {
-    color: "#8e8ba7",
-    marginLeft: 12,
-    fontSize: 16,
+    flex: 1,
   },
   logoutButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FF4F6D",
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
-    width: "100%",
-    marginBottom: 20,
+    marginTop: 30,
+    marginBottom: 30,
   },
   buttonText: {
     color: "#fff",
@@ -431,41 +453,58 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   input: {
-    flex: 1,
-    color: "#fff",
+    color: "#E8F0FE",
     padding: 0,
   },
   nameEditContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    justifyContent: "center",
+    marginBottom: 30,
   },
   nameEditIcon: {
     marginLeft: 10,
   },
   editButtonsContainer: {
-    position: "absolute",
-    right: 16,
-    top: 52,
     flexDirection: "row",
     alignItems: "center",
-    zIndex: 1,
+    gap: 8,
   },
   editActionButton: {
     padding: 8,
-    marginLeft: 8,
+    backgroundColor: "rgba(167, 139, 250, 0.1)",
+    borderRadius: 50,
+    width: 40,
+    height: 40,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   loadingText: {
-    color: "#fff",
+    color: "#E8F0FE",
     fontSize: 18,
     textAlign: "center",
     marginTop: 20,
   },
   errorText: {
-    color: "#ff4f6d",
+    color: "#FF4F6D",
     fontSize: 18,
     textAlign: "center",
     marginTop: 20,
+  },
+  pinInputContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 12,
+  },
+  pinInput: {
+    marginLeft: 0,
+    flex: 1,
+  },
+  showPinButton: {
+    padding: 8,
   },
 });
 
