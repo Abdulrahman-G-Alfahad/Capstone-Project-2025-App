@@ -34,11 +34,11 @@ const Login = () => {
     mutationKey: ["login"],
     mutationFn: () => login(userInfo),
     onSuccess: (data) => {
-      console.log(data)
-      console.log(data.token)
+      console.log(data);
+      console.log(data.token);
       setUser(true);
       const decodedToken = jwtDecode(data.token);
-      console.log(decodedToken)
+      console.log(decodedToken);
       setAccountType(decodedToken.accountType);
       // console.log("Login successful:", data);
       // console.log("Decoded account type:", decodedToken.accountType);
@@ -124,20 +124,20 @@ const Login = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1f1d35",
+    backgroundColor: "#141E30",
   },
   header: {
     alignItems: "center",
     paddingTop: 70,
     paddingBottom: 20,
-    backgroundColor: "#1f1d35",
+    backgroundColor: "#141E30",
     borderBottomWidth: 1,
-    borderBottomColor: "#2a2844",
+    borderBottomColor: "rgba(167, 139, 250, 0.2)",
   },
   headerTitle: {
     fontSize: 25,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#E8F0FE",
     textAlign: "center",
   },
   content: {
@@ -148,16 +148,18 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 32,
     textAlign: "center",
-    fontWeight: "bold",
-    color: "#fff",
+    fontWeight: "800",
+    color: "#E8F0FE",
     marginBottom: 8,
     marginTop: -80,
+    letterSpacing: 0.5,
   },
   subText: {
     fontSize: 16,
-    color: "#8e8ba7",
+    color: "#A78BFA",
     marginBottom: 40,
     textAlign: "center",
+    fontWeight: "500",
   },
   form: {
     width: "100%",
@@ -165,15 +167,17 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2a2844",
-    borderRadius: 12,
+    backgroundColor: "rgba(167, 139, 250, 0.05)",
+    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     marginTop: 10,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
   },
   input: {
     flex: 1,
-    color: "#fff",
+    color: "#E8F0FE",
     marginLeft: 12,
     fontSize: 16,
   },
@@ -181,16 +185,24 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   loginButton: {
-    backgroundColor: "#FF4F6D",
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: "#FF4F8E",
+    borderRadius: 16,
+    padding: 18,
     alignItems: "center",
     marginTop: 24,
+    shadowColor: "#FF4F8E",
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 8,
   },
   buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+    color: "#E8F0FE",
+    fontSize: 18,
+    fontWeight: "700",
   },
   registerContainer: {
     flexDirection: "row",
@@ -199,12 +211,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   registerText: {
-    color: "#8e8ba7",
-    fontSize: 14,
+    color: "#A78BFA",
+    fontSize: 15,
+    fontWeight: "500",
   },
   registerHighlight: {
-    color: "#FF4F6D",
-    fontWeight: "600",
+    color: "#E8F0FE",
+    fontWeight: "700",
   },
 });
 
