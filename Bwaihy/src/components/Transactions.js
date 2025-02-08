@@ -200,7 +200,7 @@ const Transactions = () => {
                   <MaterialCommunityIcons
                     name="calendar"
                     size={20}
-                    color="#fff"
+                    color="#A78BFA"
                   />
                   <Text style={styles.dateTextShadcn} numberOfLines={1}>
                     {format(startDate, "MMM dd, yyyy")}
@@ -219,7 +219,7 @@ const Transactions = () => {
                   <MaterialCommunityIcons
                     name="calendar"
                     size={20}
-                    color="#fff"
+                    color="#A78BFA"
                   />
                   <Text style={styles.dateTextShadcn} numberOfLines={1}>
                     {format(endDate, "MMM dd, yyyy")}
@@ -295,7 +295,7 @@ const Transactions = () => {
                 <Ionicons name="close" size={24} color="#fff" />
               </TouchableOpacity>
               <CalendarPicker
-              style={{ flex: 1 }} 
+                style={{ flex: 1 }}
                 startFromMonday={true}
                 minDate={isStartDate ? undefined : startDate}
                 maxDate={isStartDate ? endDate : undefined}
@@ -350,7 +350,7 @@ const Transactions = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1f1d35",
+    backgroundColor: "#141E30",
   },
   header: {
     flexDirection: "row",
@@ -358,9 +358,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 60,
     paddingBottom: 16,
-    backgroundColor: "#1f1d35",
+    backgroundColor: "#141E30",
     borderBottomWidth: 1,
-    borderBottomColor: "#2a2844",
+    borderBottomColor: "rgba(167, 139, 250, 0.1)",
     justifyContent: "center",
   },
   backButton: {
@@ -371,9 +371,10 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   headerTitle: {
-    fontSize: 25,
-    fontWeight: "bold",
-    color: "#fff",
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#E8F0FE",
+    letterSpacing: 0.5,
   },
   content: {
     flex: 1,
@@ -386,20 +387,23 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2a2844",
-    borderRadius: 12,
+    backgroundColor: "rgba(167, 139, 250, 0.05)",
+    borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
   },
   searchIcon: {
     marginRight: 8,
+    color: "#666",
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: "#fff",
-    paddingVertical: 0,
+    color: "#E8F0FE",
+    fontSize: 16,
   },
   dateRangeContainer: {
     marginBottom: 16,
@@ -407,16 +411,18 @@ const styles = StyleSheet.create({
   dateRangeWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2a2844",
-    borderRadius: 12,
+    backgroundColor: "rgba(167, 139, 250, 0.05)",
+    borderRadius: 16,
     padding: 12,
     gap: 12,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
   },
   dateSection: {
     flex: 1,
   },
   dateLabel: {
-    color: "#9ca3af",
+    color: "#A78BFA",
     fontSize: 12,
     marginBottom: 4,
     fontWeight: "500",
@@ -424,14 +430,16 @@ const styles = StyleSheet.create({
   dateButtonShadcn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1f1d35",
-    borderRadius: 8,
+    backgroundColor: "#141E30",
+    borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 8,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
   },
   dateTextShadcn: {
-    color: "#fff",
+    color: "#E8F0FE",
     fontSize: 14,
     flex: 1,
   },
@@ -443,28 +451,30 @@ const styles = StyleSheet.create({
   dividerLine: {
     width: 1,
     height: "100%",
-    backgroundColor: "#3f3d56",
+    backgroundColor: "rgba(167, 139, 250, 0.2)",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(20, 30, 48, 0.95)",
     justifyContent: "center",
     alignItems: "center",
   },
   calendarContainer: {
-    backgroundColor: "#2a2844",
-    borderRadius: 16,
+    backgroundColor: "#1A2942",
+    borderRadius: 24,
     padding: 20,
     width: Dimensions.get("window").width * 0.9,
     maxHeight: Dimensions.get("window").height * 0.8,
-    shadowColor: "#000",
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
+    shadowColor: "#A78BFA",
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 8,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 8,
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 16,
   },
   closeButton: {
     position: "absolute",
@@ -474,12 +484,12 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   calendarText: {
-    color: "#fff",
+    color: "#E8F0FE",
     fontSize: 14,
     fontWeight: "400",
   },
   calendarHeaderText: {
-    color: "#fff",
+    color: "#E8F0FE",
     fontSize: 18,
     fontWeight: "600",
     textTransform: "uppercase",
@@ -491,12 +501,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  dayLabelsWrapper: {
-    backgroundColor: "transparent",
-    borderTopWidth: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: "#3f3d56",
-  },
   transactionList: {
     flex: 1,
   },
@@ -504,17 +508,24 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   dateHeader: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#E8F0FE",
     marginBottom: 12,
     paddingHorizontal: 4,
+    letterSpacing: 0.5,
   },
   transactionItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    backgroundColor: "rgba(167, 139, 250, 0.05)",
+    borderRadius: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
   },
   transactionBorder: {
     borderBottomWidth: 1,
@@ -526,37 +537,56 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   transactionIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 50,
+    height: 50,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
   },
   transactionInfo: {
     flex: 1,
   },
   businessName: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
+    color: "#E8F0FE",
+    fontSize: 17,
+    fontWeight: "700",
+    marginBottom: 4,
   },
   businessType: {
-    color: "#9991b1",
-    fontSize: 12,
+    color: "#A78BFA",
+    fontSize: 14,
+    marginBottom: 2,
+    fontWeight: "500",
   },
   transactionTime: {
-    color: "#9991b1",
+    color: "#A78BFA",
     fontSize: 12,
+    fontWeight: "500",
+    opacity: 0.8,
   },
   transactionRight: {
     alignItems: "flex-end",
   },
   transactionAmount: {
-    color: "#fff",
+    color: "#E8F0FE",
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "700",
     marginRight: 10,
+  },
+  loadingText: {
+    color: "#E8F0FE",
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 20,
+  },
+  errorText: {
+    color: "#FF6B6B",
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 20,
   },
 });
 
