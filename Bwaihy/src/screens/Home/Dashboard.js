@@ -12,7 +12,7 @@ import {
   Button,
   Platform,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import {
   Ionicons,
   MaterialCommunityIcons,
@@ -25,7 +25,6 @@ import UserContext from "../../context/UserContext";
 import businesses from "../../data/businessesData";
 import moment from "moment";
 import { getFamily } from "../../api/family";
-import { makeDeposit } from "../../api/transactions";
 import AddMoneyButton from "../../components/AddMoneyButton";
 import SendMoneyButton from "../../components/SendMoneyButton";
 import AddFamilyTies from "../../components/AddFamilyTies";
@@ -77,33 +76,35 @@ const Dashboard = () => {
   const [isSendMoneyModalVisible, setIsSendMoneyModalVisible] = useState(false);
   const [isBalanceHidden, setIsBalanceHidden] = useState(false);
 
-  useEffect(() => {
-    const fetchProfileAndFamily = async () => {
-      try {
-        const token = await getToken();
-        if (token) {
-          const decodedToken = jwtDecode(token);
-          const userId = decodedToken.userId;
-          const profileData = await getProfile(userId);
-          setProfile(profileData.user);
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchProfileAndFamily = async () => {
+        try {
+          const token = await getToken();
+          if (token) {
+            const decodedToken = jwtDecode(token);
+            const userId = decodedToken.userId;
+            const profileData = await getProfile(userId);
+            setProfile(profileData.user);
 
-          const familyData = await getFamily(userId);
-          setFamilyMembers(familyData.familyMembers);
-        } else {
-          throw new Error("No token found");
+            const familyData = await getFamily(userId);
+            setFamilyMembers(familyData.familyMembers);
+          } else {
+            throw new Error("No token found");
+          }
+        } catch (err) {
+          setIsError(true);
+          setError(err);
+        } finally {
+          setIsLoading(false);
         }
-      } catch (err) {
-        setIsError(true);
-        setError(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      };
 
-    if (user) {
-      fetchProfileAndFamily();
-    }
-  }, [user]);
+      if (user) {
+        fetchProfileAndFamily();
+      }
+    }, [user])
+  );
 
   const handleFamilyMemberAdded = (updatedFamilyMembers) => {
     setFamilyMembers(updatedFamilyMembers);
@@ -114,7 +115,9 @@ const Dashboard = () => {
       <TouchableOpacity
         key={member.id}
         style={styles.familyMember}
-        onPress={() => navigation.navigate("FamilyTieDetails", { member })}
+        onPress={() =>
+          navigation.navigate("FamilyTieDetails", { member, profile })
+        }
       >
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
@@ -216,7 +219,8 @@ const Dashboard = () => {
   );
   const limitedTransactions = Object.entries(groupedTransactions)
     .flatMap(([date, transactions]) => transactions.map((tx) => ({ date, tx })))
-    .slice(-3);
+    .reverse() // Reverse the transactions to show the latest ones on top
+    .slice(0, 3); // Limit to the latest 3 transactions
 
   return (
     <SafeAreaView style={styles.safeArea}>

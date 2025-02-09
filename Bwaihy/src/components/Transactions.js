@@ -154,7 +154,7 @@ const Transactions = () => {
   }
 
   const groupedTransactions = groupTransactionsByDate(
-    profile.transactionHistory
+    profile.transactionHistory.reverse()
   );
   console.log(groupedTransactions);
 
