@@ -15,10 +15,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { register } from "../../api/auth";
 import { useMutation } from "@tanstack/react-query";
 import UserContext from "../../context/UserContext";
+import FaceIDSetup from "../../components/FaceIDSetup";
 import FaceID from "../../components/FaceID";
 
 const Register = () => {
   const navigation = useNavigation();
+  const [currentStep, setCurrentStep] = useState(1);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,7 +31,8 @@ const Register = () => {
   const [address, setAddress] = useState("");
   const [username, setUsername] = useState("");
   const { user, setUser } = useContext(UserContext);
-  const [isFaceIDModalVisible, setIsFaceIDModalVisible] = useState(false);
+  const [showFaceIDSetup, setShowFaceIDSetup] = useState(false);
+  const [showFaceID, setShowFaceID] = useState(false);
   const [faceId, setFaceId] = useState("");
 
   const userInfo = {
@@ -61,10 +64,6 @@ const Register = () => {
     },
   });
 
-  // const handleRegister = () => {
-  //   mutate();
-  // };
-
   const handleRegister = () => {
     console.log("first");
     console.log(faceId);
@@ -86,7 +85,14 @@ const Register = () => {
     mutate();
   };
 
-  const handleFaceIDSuccess = () => {
+  const handleFaceIDSetupConfirm = () => {
+    setShowFaceIDSetup(false);
+    setShowFaceID(true);
+  };
+
+  const handleFaceIDSuccess = (data) => {
+    setFaceId(data.facialId);
+    setShowFaceID(false);
     Alert.alert("Success", "Face enrollment completed successfully!", [
       {
         text: "Continue",
@@ -95,154 +101,268 @@ const Register = () => {
     ]);
   };
 
+  const validateStep1 = () => {
+    if (!fullName || !email || !username || !password) {
+      Alert.alert(
+        "Validation Error",
+        "Please fill in all user information fields"
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep2 = () => {
+    if (!phoneNumber || !civilId || !bankAccount || !address) {
+      Alert.alert(
+        "Validation Error",
+        "Please fill in all personal information fields"
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const handleNext = () => {
+    if (currentStep === 1 && validateStep1()) {
+      setCurrentStep(2);
+    } else if (currentStep === 2 && validateStep2()) {
+      setCurrentStep(3);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const renderStepIndicator = () => {
+    const steps = [
+      { number: 1, label: "User Info", icon: "person-outline" },
+      { number: 2, label: "Personal Info", icon: "card-outline" },
+      { number: 3, label: "Face ID", icon: "scan-outline" },
+    ];
+
+    return (
+      <View style={styles.stepperContainer}>
+        <View style={styles.stepRow}>
+          {steps.map((step, index) => (
+            <React.Fragment key={step.number}>
+              <View style={styles.stepWrapper}>
+                <View
+                  style={[
+                    styles.step,
+                    currentStep >= step.number && styles.activeStep,
+                  ]}
+                >
+                  <Ionicons
+                    name={step.icon}
+                    size={20}
+                    color={currentStep >= step.number ? "#fff" : "#8e8ba7"}
+                  />
+                </View>
+                <Text
+                  style={[
+                    styles.stepLabel,
+                    currentStep >= step.number && styles.activeStepLabel,
+                  ]}
+                >
+                  {step.label}
+                </Text>
+              </View>
+              {index < steps.length - 1 && (
+                <View
+                  style={[
+                    styles.stepLine,
+                    currentStep > step.number && styles.activeStepLine,
+                  ]}
+                />
+              )}
+            </React.Fragment>
+          ))}
+        </View>
+      </View>
+    );
+  };
+
+  const renderStep1 = () => (
+    <>
+      <View style={styles.inputContainer}>
+        <Ionicons name="person-outline" size={24} color="#8e8ba7" />
+        <TextInput
+          style={styles.input}
+          placeholder="Full Name"
+          placeholderTextColor="#8e8ba7"
+          value={fullName}
+          onChangeText={setFullName}
+          autoCapitalize="words"
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Ionicons name="at-outline" size={24} color="#8e8ba7" />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#8e8ba7"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Ionicons name="person-circle-outline" size={24} color="#8e8ba7" />
+        <TextInput
+          style={styles.input}
+          placeholder="Username"
+          placeholderTextColor="#8e8ba7"
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Ionicons name="lock-closed-outline" size={24} color="#8e8ba7" />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          placeholderTextColor="#8e8ba7"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPassword}
+        />
+        <TouchableOpacity
+          onPress={() => setShowPassword(!showPassword)}
+          style={styles.eyeIcon}
+        >
+          <Ionicons
+            name={showPassword ? "eye-outline" : "eye-off-outline"}
+            size={24}
+            color="#8e8ba7"
+          />
+        </TouchableOpacity>
+      </View>
+    </>
+  );
+
+  const renderStep2 = () => (
+    <>
+      <View style={styles.inputContainer}>
+        <Ionicons name="call-outline" size={24} color="#8e8ba7" />
+        <TextInput
+          style={styles.input}
+          placeholder="Phone Number"
+          placeholderTextColor="#8e8ba7"
+          value={phoneNumber}
+          onChangeText={setPhoneNumber}
+          keyboardType="phone-pad"
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Ionicons name="card-outline" size={24} color="#8e8ba7" />
+        <TextInput
+          style={styles.input}
+          placeholder="Civil ID"
+          placeholderTextColor="#8e8ba7"
+          value={civilId}
+          onChangeText={setCivilId}
+          autoCapitalize="words"
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Ionicons name="wallet-outline" size={24} color="#8e8ba7" />
+        <TextInput
+          style={styles.input}
+          placeholder="Bank Account Number"
+          placeholderTextColor="#8e8ba7"
+          value={bankAccount}
+          onChangeText={setBankAccount}
+          autoCapitalize="words"
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Ionicons name="location-outline" size={24} color="#8e8ba7" />
+        <TextInput
+          style={styles.input}
+          placeholder="Address"
+          placeholderTextColor="#8e8ba7"
+          value={address}
+          onChangeText={setAddress}
+          autoCapitalize="words"
+        />
+      </View>
+    </>
+  );
+
+  const renderStep3 = () => (
+    <View style={styles.faceIdStep}>
+      <TouchableOpacity
+        style={styles.faceIdButton}
+        onPress={() => setShowFaceIDSetup(true)}
+      >
+        <Ionicons name="scan-outline" size={24} color="#fff" />
+        <Text style={styles.faceIdButtonText}>
+          {faceId ? "Face ID Set ✓" : "Set up Face ID"}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Register</Text>
       </View>
 
+      {renderStepIndicator()}
+
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardAvoidingView}
+        style={{ flex: 1 }}
       >
         <ScrollView
-          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollViewContent}
         >
           <View style={styles.content}>
-            <Text style={styles.welcomeText}>Create Account</Text>
-            <Text style={styles.subText}>Sign up to get started</Text>
-
             <View style={styles.form}>
-              <View style={styles.inputContainer}>
-                <Ionicons name="person-outline" size={24} color="#8e8ba7" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Full Name"
-                  placeholderTextColor="#8e8ba7"
-                  value={fullName}
-                  onChangeText={setFullName}
-                  autoCapitalize="words"
-                />
+              {currentStep === 1 && renderStep1()}
+              {currentStep === 2 && renderStep2()}
+              {currentStep === 3 && renderStep3()}
+
+              <View style={styles.navigationButtons}>
+                {currentStep > 1 && (
+                  <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={handleBack}
+                  >
+                    <Text style={styles.backButtonText}>Back</Text>
+                  </TouchableOpacity>
+                )}
+
+                {currentStep < 3 ? (
+                  <TouchableOpacity
+                    style={styles.nextButton}
+                    onPress={handleNext}
+                  >
+                    <Text style={styles.buttonText}>Next</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.nextButton}
+                    onPress={handleRegister}
+                  >
+                    <Text style={styles.buttonText}>Register</Text>
+                  </TouchableOpacity>
+                )}
               </View>
-
-              <View style={styles.inputContainer}>
-                <Ionicons name="at-outline" size={24} color="#8e8ba7" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="User Name"
-                  placeholderTextColor="#8e8ba7"
-                  value={username}
-                  onChangeText={setUsername}
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Ionicons name="mail-outline" size={24} color="#8e8ba7" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email"
-                  placeholderTextColor="#8e8ba7"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={24}
-                  color="#8e8ba7"
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Password"
-                  placeholderTextColor="#8e8ba7"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
-                  style={styles.eyeIcon}
-                >
-                  <Ionicons
-                    name={showPassword ? "eye-outline" : "eye-off-outline"}
-                    size={24}
-                    color="#8e8ba7"
-                  />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Ionicons name="call-outline" size={24} color="#8e8ba7" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Phone Number"
-                  placeholderTextColor="#8e8ba7"
-                  value={phoneNumber}
-                  onChangeText={setPhoneNumber}
-                  keyboardType="phone-pad"
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Ionicons name="card-outline" size={24} color="#8e8ba7" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Civil ID"
-                  placeholderTextColor="#8e8ba7"
-                  value={civilId}
-                  onChangeText={setCivilId}
-                  autoCapitalize="words"
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Ionicons name="wallet-outline" size={24} color="#8e8ba7" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Bank Account Number"
-                  placeholderTextColor="#8e8ba7"
-                  value={bankAccount}
-                  onChangeText={setBankAccount}
-                  autoCapitalize="words"
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Ionicons name="location-outline" size={24} color="#8e8ba7" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Address"
-                  placeholderTextColor="#8e8ba7"
-                  value={address}
-                  onChangeText={setAddress}
-                  autoCapitalize="words"
-                />
-              </View>
-
-              <TouchableOpacity
-                style={styles.faceIdButton}
-                onPress={() => {
-                  console.log("Set up Face ID button clicked");
-                  setIsFaceIDModalVisible(true);
-                }}
-              >
-                <Ionicons name="scan-outline" size={24} color="#fff" />
-                <Text style={styles.faceIdButtonText}>Set up Face ID</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.registerButton}
-                onPress={handleRegister}
-              >
-                <Text style={styles.buttonText}>Register</Text>
-              </TouchableOpacity>
 
               <View style={styles.loginContainer}>
                 <Text style={styles.loginText}>Already have an account? </Text>
@@ -255,11 +375,19 @@ const Register = () => {
         </ScrollView>
       </KeyboardAvoidingView>
 
+      <FaceIDSetup
+        isVisible={showFaceIDSetup}
+        onClose={() => setShowFaceIDSetup(false)}
+        onConfirm={handleFaceIDSetupConfirm}
+        mode="enroll"
+      />
+
       <FaceID
-        isVisible={isFaceIDModalVisible}
-        onClose={() => setIsFaceIDModalVisible(false)}
+        isVisible={showFaceID}
+        onClose={() => setShowFaceID(false)}
         onSuccess={handleFaceIDSuccess}
         userData={{ email, username, fullName }}
+        mode="enroll"
         setFaceId={setFaceId}
       />
     </View>
@@ -273,106 +401,57 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: 60,
-    paddingBottom: 16,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
     backgroundColor: "#141E30",
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(167, 139, 250, 0.2)",
-    alignItems: "center",
-    shadowColor: "#A78BFA",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: "800",
     color: "#E8F0FE",
-    letterSpacing: 0.5,
+    textAlign: "center",
   },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-    paddingTop: 35,
-  },
-  scrollViewContent: {
+  scrollContent: {
     flexGrow: 1,
   },
   content: {
     flex: 1,
-    padding: 24,
-    marginTop: -60,
-  },
-  welcomeText: {
-    fontSize: 32,
-    textAlign: "center",
-    fontWeight: "800",
-    color: "#E8F0FE",
-    marginTop: 20,
-    marginBottom: 8,
-    letterSpacing: 0.5,
-  },
-  subText: {
-    fontSize: 16,
-    color: "#A78BFA",
-    marginBottom: 32,
-    textAlign: "center",
-    fontWeight: "500",
+    paddingHorizontal: 24,
+    paddingTop: 24,
   },
   form: {
     width: "100%",
-    gap: 16,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(167, 139, 250, 0.05)",
+    backgroundColor: "rgba(142, 139, 167, 0.1)",
     borderRadius: 16,
-    padding: 16,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: "rgba(167, 139, 250, 0.2)",
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
   input: {
     flex: 1,
     color: "#E8F0FE",
+    paddingVertical: 16,
     marginLeft: 12,
     fontSize: 16,
-    height: 24,
   },
   eyeIcon: {
-    padding: 4,
-  },
-  registerButton: {
-    backgroundColor: "#FF4F8E",
-    borderRadius: 16,
-    padding: 18,
-    alignItems: "center",
-    marginTop: 8,
-    shadowColor: "#FF4F8E",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 24,
-    elevation: 8,
+    padding: 8,
   },
   buttonText: {
     color: "#E8F0FE",
     fontSize: 18,
     fontWeight: "700",
+    textAlign: "center",
   },
   loginContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 8,
+    marginTop: 16,
+    marginBottom: 32,
   },
   loginText: {
     color: "#A78BFA",
@@ -399,6 +478,91 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginLeft: 8,
+  },
+  stepperContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    backgroundColor: "#141E30",
+  },
+  stepRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stepWrapper: {
+    alignItems: "center",
+    width: 80,
+  },
+  step: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(142, 139, 167, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#8e8ba7",
+  },
+  activeStep: {
+    backgroundColor: "#6C63FF",
+    borderColor: "#6C63FF",
+  },
+  stepLine: {
+    width: 50,
+    height: 2,
+    backgroundColor: "rgba(142, 139, 167, 0.1)",
+    marginHorizontal: 4,
+  },
+  activeStepLine: {
+    backgroundColor: "#6C63FF",
+  },
+  stepLabel: {
+    color: "#8e8ba7",
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 8,
+    fontWeight: "600",
+  },
+  activeStepLabel: {
+    color: "#6C63FF",
+  },
+  navigationButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 90,
+  },
+  backButton: {
+    backgroundColor: "rgba(142, 139, 167, 0.1)",
+    padding: 18,
+    borderRadius: 16,
+    flex: 1,
+    marginRight: 8,
+  },
+  backButtonText: {
+    color: "#8e8ba7",
+    fontSize: 18,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  nextButton: {
+    backgroundColor: "#FF4F8E",
+    padding: 18,
+    borderRadius: 16,
+    flex: 1,
+    marginLeft: 8,
+    shadowColor: "#FF4F8E",
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+  faceIdStep: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 32,
   },
 });
 

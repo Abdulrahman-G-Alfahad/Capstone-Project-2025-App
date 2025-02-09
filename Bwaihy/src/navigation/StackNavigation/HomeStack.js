@@ -5,7 +5,6 @@ import Dashboard from "../../screens/Home/Dashboard";
 import FamilyTies from "../../components/FamilyTies";
 import Transactions from "../../components/Transactions";
 import QRCode from "../../screens/Home/QRCode";
-import AddBeneficiary from "../../screens/Home/AddBeneficiary";
 import Profile from "../../screens/Auth/Profile";
 import FamilyTieDetails from "../../screens/Home/FamilyTieDetails";
 import Promotions from "../../screens/Home/Promotions";
@@ -19,7 +18,6 @@ const HomeStack = () => {
       <Stack.Screen name="FamilyTies" component={FamilyTies} />
       <Stack.Screen name="Transactions" component={Transactions} />
       <Stack.Screen name="QRCode" component={QRCode} />
-      <Stack.Screen name="AddBeneficiary" component={AddBeneficiary} />
       <Stack.Screen name="Profile" component={Profile} />
       <Stack.Screen
         name="FamilyTieDetails"

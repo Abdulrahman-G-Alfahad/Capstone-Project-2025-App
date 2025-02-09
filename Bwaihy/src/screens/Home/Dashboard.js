@@ -239,12 +239,6 @@ const Dashboard = () => {
               <Ionicons name="person" size={20} color="#A78BFA" />
             </TouchableOpacity>
           </View>
-          <View style={styles.greetingContainer}>
-            <Text style={styles.greetingTime}>{getGreeting()}</Text>
-            <Text style={styles.greeting}>
-              {profile ? profile.fullName.split(" ")[0] : "User"} 👋
-            </Text>
-          </View>
         </View>
 
         {/* Dashboard Main Content */}
@@ -252,6 +246,14 @@ const Dashboard = () => {
           style={styles.mainContent}
           showsVerticalScrollIndicator={false}
         >
+          {/* Greeting Section */}
+          <View style={styles.greetingContainer}>
+            <Text style={styles.greetingTime}>{getGreeting()}</Text>
+            <Text style={styles.greeting}>
+              {profile ? profile.fullName.split(" ")[0] : "User"} 👋
+            </Text>
+          </View>
+
           {/* Balance Card */}
           <View style={styles.balanceCard}>
             <View style={styles.balanceHeader}>
@@ -401,8 +403,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#141E30",
   },
   header: {
-    padding: 20,
-    paddingTop: 6,
+    padding: 12,
+    paddingTop: 4,
     backgroundColor: "#141E30",
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.05)",
@@ -419,7 +421,7 @@ const styles = StyleSheet.create({
   },
   logoText: {
     color: "#E8F0FE",
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: "400",
     fontFamily: Platform.OS === "ios" ? "Helvetica Neue" : "sans-serif",
   },
@@ -427,7 +429,8 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   greetingContainer: {
-    marginTop: 4,
+    marginTop: 20,
+    marginBottom: 8,
   },
   greetingTime: {
     fontSize: 16,
@@ -443,11 +446,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   profileIcon: {
-    padding: 8,
+    padding: 6,
     backgroundColor: "rgba(167, 139, 250, 0.08)",
     borderRadius: 50,
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderWidth: 1.5,
     borderColor: "#A78BFA",
     shadowColor: "#A78BFA",

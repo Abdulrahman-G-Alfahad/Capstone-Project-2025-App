@@ -11,7 +11,7 @@ import { WebView } from "react-native-webview";
 import { Camera } from "expo-camera";
 import { Ionicons } from "@expo/vector-icons";
 
-const FACEIO_PUBLIC_ID = "fioad748";
+const FACEIO_PUBLIC_ID = "fioa5917";
 
 const FaceID = ({
   isVisible,
@@ -21,7 +21,6 @@ const FaceID = ({
   mode = "enroll",
   setFaceId,
 }) => {
-  const [showFaceIO, setShowFaceIO] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
   const webViewRef = useRef(null);
   const { email, username, fullName } = userData;
@@ -39,49 +38,77 @@ const FaceID = ({
     })();
   }, []);
 
-  const handleFaceIDSetup = async () => {
-    console.log(
-      `${
-        mode === "enroll" ? "Set up" : "Authenticate with"
-      } Face ID button clicked`
-    );
-    console.log("Current values:", { email, username, fullName });
-
-    if (mode === "enroll" && (!email || !username || !fullName)) {
-      console.log("Missing required fields");
-      Alert.alert(
-        "Required Information",
-        "Please fill in your email, username, and full name before setting up Face ID."
-      );
-      return;
-    }
-
+  const handleFaceIOMessage = (event) => {
+    console.log("handleFaceIOMessage called");
     try {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      console.log("Camera permission status:", status);
+      const message = JSON.parse(event.nativeEvent.data);
+      console.log("FaceIO message received:", message);
 
-      if (status !== "granted") {
-        Alert.alert(
-          "Camera Permission Required",
-          "Please enable camera access in your device settings to use Face ID."
-        );
-        return;
+      if (message.type === "status") {
+        console.log("Status update:", message.message);
+      } else if (message.type === "success") {
+        if (mode === "enroll") {
+          // Store the facial ID for future authentication
+          setFaceId(message.data.facialId);
+          const { facialId, timestamp, details } = message.data;
+          console.log("Enrollment successful:", {
+            facialId,
+            timestamp,
+            details,
+          });
+        } else {
+          // Verify the authenticated user's payload
+          const { facialId, payload } = message.data;
+          console.log("Authentication successful:", { facialId, payload });
+        }
+        onSuccess(message.data);
+        onClose();
+      } else if (message.type === "error") {
+        console.log("FaceIO error:", message.error);
+
+        if (message.code === 2 && mode === "enroll") {
+          Alert.alert(
+            "Face Already Registered",
+            "This face is already registered. Would you like to try logging in instead?",
+            [
+              {
+                text: "Yes",
+                onPress: () => {
+                  console.log("Switching to authentication mode");
+                },
+              },
+              {
+                text: "No",
+                style: "cancel",
+              },
+            ]
+          );
+        } else {
+          Alert.alert(
+            mode === "enroll"
+              ? "Face ID Setup Failed"
+              : "Face ID Authentication Failed",
+            message.error,
+            [
+              {
+                text: "Try Again",
+                onPress: () => {
+                  webViewRef.current?.reload();
+                },
+              },
+              {
+                text: "Cancel",
+                style: "cancel",
+                onPress: onClose,
+              },
+            ]
+          );
+        }
       }
-
-      setHasPermission(true);
-      console.log(`Starting FaceIO ${mode}`);
-      onClose();
-      setTimeout(() => {
-        setShowFaceIO(true);
-      }, 1000);
     } catch (error) {
-      console.error("Error setting up FaceIO:", error);
-      Alert.alert(
-        "Error",
-        `Failed to ${
-          mode === "enroll" ? "set up" : "authenticate with"
-        } Face ID. Please try again.`
-      );
+      console.error("Error handling FaceIO message:", error);
+      Alert.alert("Error", "An unexpected error occurred. Please try again.");
+      onClose();
     }
   };
 
@@ -92,13 +119,11 @@ const FaceID = ({
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: gap: blob: mediastream: https://ssl.gstatic.com https://cdn.faceio.net https://api.faceio.net; script-src * 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.faceio.net https://api.faceio.net; img-src * 'self' data: blob: https://cdn.faceio.net https://api.faceio.net; media-src * 'self' blob: mediastream:; connect-src * 'self' blob: mediastream: https://cdn.faceio.net https://api.faceio.net; style-src * 'self' 'unsafe-inline';">
         <script>
-          // Create a global promise to track script loading
           window.faceioSDKLoaded = new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = 'https://cdn.faceio.net/fio.js';
             script.async = true;
             script.onload = () => {
-              // Check if faceIO is actually available
               if (typeof faceIO !== 'undefined') {
                 resolve();
               } else {
@@ -177,11 +202,10 @@ const FaceID = ({
               console.log('FaceIO instance created successfully');
               updateStatus('FaceIO initialized successfully');
               
-              await new Promise(resolve => setTimeout(resolve, 1000)); // Small delay before starting
+              await new Promise(resolve => setTimeout(resolve, 1000));
               await startFaceIO();
             } catch (error) {
               console.error('FaceIO initialization error:', error);
-              console.error('Error stack:', error.stack);
               updateStatus('Error: ' + (error.message || 'Failed to initialize FaceIO'));
               window.ReactNativeWebView.postMessage(JSON.stringify({ 
                 type: 'error', 
@@ -271,7 +295,6 @@ const FaceID = ({
             }
           }
 
-          // Initialize when the document is ready
           document.addEventListener('DOMContentLoaded', () => {
             console.log('Document ready, initializing FaceIO...');
             initFaceIO().catch(error => {
@@ -284,330 +307,134 @@ const FaceID = ({
     </html>
   `;
 
-  const handleFaceIOMessage = (event) => {
-    console.log("handleFaceIOMessage called");
-    try {
-      const message = JSON.parse(event.nativeEvent.data);
-      console.log("FaceIO message received:", message);
-
-      if (message.type === "status") {
-        console.log("Status update:", message.message);
-      } else if (message.type === "success") {
-        setShowFaceIO(false);
-        if (mode === "enroll") {
-          // Store the facial ID for future authentication
-          setFaceId(message.data.facialId);
-          const { facialId, timestamp, details } = message.data;
-          console.log("Enrollment successful:", {
-            facialId,
-            timestamp,
-            details,
-          });
-        } else {
-          // Verify the authenticated user's payload
-          const { facialId, payload } = message.data;
-          console.log("Authentication successful:", { facialId, payload });
-        }
-        onSuccess(message.data);
-      } else if (message.type === "error") {
-        console.log("FaceIO error:", message.error);
-        setShowFaceIO(false);
-
-        if (message.code === 2 && mode === "enroll") {
-          // If face is already registered during enrollment, suggest login
-          Alert.alert(
-            "Face Already Registered",
-            "This face is already registered. Would you like to try logging in instead?",
-            [
-              {
-                text: "Yes",
-                onPress: () => {
-                  // You might want to navigate to login or switch mode
-                  console.log("Switching to authentication mode");
-                },
-              },
-              {
-                text: "No",
-                style: "cancel",
-              },
-            ]
-          );
-        } else {
-          Alert.alert(
-            mode === "enroll"
-              ? "Face ID Setup Failed"
-              : "Face ID Authentication Failed",
-            message.error,
-            [
-              {
-                text: "Try Again",
-                onPress: () => {
-                  setShowFaceIO(false);
-                  setTimeout(() => setShowFaceIO(true), 1000);
-                },
-              },
-              {
-                text: "Cancel",
-                style: "cancel",
-                onPress: () => setShowFaceIO(false),
-              },
-            ]
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Error handling FaceIO message:", error);
-      setShowFaceIO(false);
-      Alert.alert("Error", "An unexpected error occurred. Please try again.");
-    }
-  };
-
   return (
-    <>
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={isVisible}
-        onRequestClose={onClose}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {mode === "enroll" ? "Set Up Face ID" : "Face ID Authentication"}
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={isVisible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.faceIOModalOverlay}>
+        <View style={styles.faceIOModalContent}>
+          <View style={styles.faceIOHeader}>
+            <Text style={styles.faceIOHeaderText}>
+              Face ID {mode === "enroll" ? "Setup" : "Authentication"}
             </Text>
-            <Text style={styles.modalSubtitle}>
-              {mode === "enroll"
-                ? "Please set up Face ID for secure authentication."
-                : "Please authenticate using Face ID."}
-            </Text>
-
-            <View style={styles.faceIDIconContainer}>
-              <Ionicons name="scan-outline" size={80} color="#FF4F6D" />
-            </View>
-
             <TouchableOpacity
-              style={styles.confirmButton}
-              onPress={handleFaceIDSetup}
+              style={styles.closeFaceIOButton}
+              onPress={onClose}
             >
-              <Text style={styles.confirmButtonText}>
-                {mode === "enroll" ? "Enable Face ID" : "Authenticate"}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Ionicons name="close-circle" size={28} color="#9991b1" />
             </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
-
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={showFaceIO}
-        onRequestClose={() => setShowFaceIO(false)}
-      >
-        <View style={styles.faceIOModalOverlay}>
-          <View style={styles.faceIOModalContent}>
-            <View style={styles.faceIOHeader}>
-              <Text style={styles.faceIOHeaderText}>Face ID Setup</Text>
-              <TouchableOpacity
-                style={styles.closeFaceIOButton}
-                onPress={() => setShowFaceIO(false)}
-              >
-                <Ionicons name="close-circle" size={28} color="#9991b1" />
-              </TouchableOpacity>
-            </View>
-            <WebView
-              ref={webViewRef}
-              source={{
-                html: faceIOScript,
-                baseUrl: "https://cdn.faceio.net",
-              }}
-              onMessage={handleFaceIOMessage}
-              style={styles.webView}
-              javaScriptEnabled={true}
-              domStorageEnabled={true}
-              mediaPlaybackRequiresUserAction={false}
-              allowsInlineMediaPlayback={true}
-              cameraAccessOnPermission={true}
-              originWhitelist={["*"]}
-              mixedContentMode="always"
-              allowsFullscreenVideo={true}
-              onShouldStartLoadWithRequest={(request) => {
-                console.log("Load request:", request);
+          <WebView
+            ref={webViewRef}
+            source={{
+              html: faceIOScript,
+              baseUrl: "https://cdn.faceio.net",
+            }}
+            onMessage={handleFaceIOMessage}
+            style={styles.webView}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            mediaPlaybackRequiresUserAction={false}
+            allowsInlineMediaPlayback={true}
+            cameraAccessOnPermission={true}
+            originWhitelist={["*"]}
+            mixedContentMode="always"
+            allowsFullscreenVideo={true}
+            onShouldStartLoadWithRequest={(request) => {
+              console.log("Load request:", request);
+              return true;
+            }}
+            startInLoadingState={true}
+            useWebKit={true}
+            scrollEnabled={false}
+            bounces={false}
+            cacheEnabled={false}
+            incognito={true}
+            allowsBackForwardNavigationGestures={false}
+            applicationNameForUserAgent="BWaihy-iOS"
+            webviewDebuggingEnabled={true}
+            androidLayerType="hardware"
+            androidHardwareAccelerationDisabled={false}
+            setSupportMultipleWindows={false}
+            overScrollMode="never"
+            textZoom={100}
+            pullToRefreshEnabled={false}
+            injectedJavaScript={`
+              window.onerror = function(message, source, lineno, colno, error) {
+                console.log('JavaScript Error:', message, source, lineno);
+                window.ReactNativeWebView.postMessage(JSON.stringify({
+                  type: 'error',
+                  error: 'JavaScript Error: ' + message,
+                  source: source,
+                  line: lineno
+                }));
                 return true;
-              }}
-              startInLoadingState={true}
-              useWebKit={true}
-              scrollEnabled={false}
-              bounces={false}
-              cacheEnabled={false}
-              incognito={true}
-              allowsBackForwardNavigationGestures={false}
-              applicationNameForUserAgent="BWaihy-iOS"
-              webviewDebuggingEnabled={true}
-              androidLayerType="hardware"
-              androidHardwareAccelerationDisabled={false}
-              setSupportMultipleWindows={false}
-              overScrollMode="never"
-              textZoom={100}
-              pullToRefreshEnabled={false}
-              injectedJavaScript={`
-                window.onerror = function(message, source, lineno, colno, error) {
-                  console.log('JavaScript Error:', message, source, lineno);
+              };
+
+              (function() {
+                var originalConsoleLog = console.log;
+                console.log = function() {
+                  window.ReactNativeWebView.postMessage(JSON.stringify({
+                    type: 'log',
+                    message: Array.from(arguments).join(' ')
+                  }));
+                  originalConsoleLog.apply(console, arguments);
+                };
+              })();
+
+              (function() {
+                var originalConsoleError = console.error;
+                console.error = function() {
                   window.ReactNativeWebView.postMessage(JSON.stringify({
                     type: 'error',
-                    error: 'JavaScript Error: ' + message,
-                    source: source,
-                    line: lineno
+                    message: Array.from(arguments).join(' ')
                   }));
-                  return true;
+                  originalConsoleError.apply(console, arguments);
                 };
-
-                // Add console.log handler
-                (function() {
-                  var originalConsoleLog = console.log;
-                  console.log = function() {
-                    window.ReactNativeWebView.postMessage(JSON.stringify({
-                      type: 'log',
-                      message: Array.from(arguments).join(' ')
-                    }));
-                    originalConsoleLog.apply(console, arguments);
-                  };
-                })();
-
-                // Add console.error handler
-                (function() {
-                  var originalConsoleError = console.error;
-                  console.error = function() {
-                    window.ReactNativeWebView.postMessage(JSON.stringify({
-                      type: 'error',
-                      message: Array.from(arguments).join(' ')
-                    }));
-                    originalConsoleError.apply(console, arguments);
-                  };
-                })();
-                true;
-              `}
-              onNavigationStateChange={(navState) => {
-                console.log("Navigation State:", navState);
-              }}
-              onLoadEnd={() => {
-                console.log("WebView load completed");
-              }}
-              onLoadStart={() => {
-                console.log("WebView load started");
-              }}
-              onError={(syntheticEvent) => {
-                const { nativeEvent } = syntheticEvent;
-                console.warn("WebView error:", nativeEvent);
-                Alert.alert(
-                  "Error",
-                  "Failed to load face detection. Please check your internet connection and try again.",
-                  [
-                    {
-                      text: "Retry",
-                      onPress: () => {
-                        webViewRef.current?.reload();
-                      },
+              })();
+              true;
+            `}
+            onNavigationStateChange={(navState) => {
+              console.log("Navigation State:", navState);
+            }}
+            onLoadEnd={() => {
+              console.log("WebView load completed");
+            }}
+            onLoadStart={() => {
+              console.log("WebView load started");
+            }}
+            onError={(syntheticEvent) => {
+              const { nativeEvent } = syntheticEvent;
+              console.warn("WebView error:", nativeEvent);
+              Alert.alert(
+                "Error",
+                "Failed to load face detection. Please check your internet connection and try again.",
+                [
+                  {
+                    text: "Retry",
+                    onPress: () => {
+                      webViewRef.current?.reload();
                     },
-                    {
-                      text: "Cancel",
-                      style: "cancel",
-                      onPress: () => setShowFaceIO(false),
-                    },
-                  ]
-                );
-              }}
-            />
-          </View>
+                  },
+                  {
+                    text: "Cancel",
+                    style: "cancel",
+                    onPress: onClose,
+                  },
+                ]
+              );
+            }}
+          />
         </View>
-      </Modal>
-    </>
+      </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(20, 30, 48, 0.95)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    backgroundColor: "#141E30",
-    borderRadius: 24,
-    padding: 32,
-    width: "90%",
-    alignItems: "center",
-    shadowColor: "#A78BFA",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 24,
-    elevation: 16,
-    borderWidth: 1,
-    borderColor: "rgba(167, 139, 250, 0.2)",
-  },
-  modalTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#E8F0FE",
-    textAlign: "center",
-    marginBottom: 16,
-    letterSpacing: 0.5,
-  },
-  modalSubtitle: {
-    fontSize: 16,
-    color: "rgba(232, 240, 254, 0.6)",
-    textAlign: "center",
-    marginBottom: 32,
-    lineHeight: 24,
-    paddingHorizontal: 20,
-    fontWeight: "500",
-  },
-  faceIDIconContainer: {
-    marginVertical: 24,
-    alignItems: "center",
-    backgroundColor: "rgba(255, 79, 142, 0.1)",
-    padding: 24,
-    borderRadius: 50,
-    borderWidth: 2,
-    borderColor: "rgba(255, 79, 142, 0.2)",
-  },
-  confirmButton: {
-    width: "100%",
-    backgroundColor: "#FF4F8E",
-    padding: 18,
-    borderRadius: 16,
-    marginBottom: 16,
-    shadowColor: "#FF4F8E",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 24,
-    elevation: 8,
-  },
-  confirmButtonText: {
-    color: "#E8F0FE",
-    fontSize: 18,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  cancelButton: {
-    width: "100%",
-  },
-  cancelButtonText: {
-    color: "rgba(232, 240, 254, 0.6)",
-    fontSize: 15,
-    fontWeight: "500",
-    textAlign: "center",
-  },
   faceIOModalOverlay: {
     flex: 1,
     backgroundColor: "rgba(20, 30, 48, 0.98)",

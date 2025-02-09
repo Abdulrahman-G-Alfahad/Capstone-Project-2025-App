@@ -6,15 +6,15 @@ import {
   TouchableOpacity,
   TextInput,
   FlatList,
-  Modal,
   Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import UserContext from "../context/UserContext";
-import { getFamily, deleteFamily, addFamily } from "../api/family";
+import { getFamily } from "../api/family";
 import { jwtDecode } from "jwt-decode";
 import { getToken } from "../api/storage";
+import AddFamilyTies from "./AddFamilyTies";
 
 const getInitials = (name) => {
   if (!name) return ""; // Return empty string if name is undefined or null
@@ -49,10 +49,9 @@ const FamilyTies = () => {
   const navigation = useNavigation();
   const { user } = useContext(UserContext);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [username, setUsername] = useState("");
   const [familyMembers, setFamilyMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
     fetchFamilyMembers();
@@ -71,28 +70,6 @@ const FamilyTies = () => {
       console.error("Error fetching family members:", error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleAddBeneficiary = async () => {
-    if (!username.trim()) {
-      return;
-    }
-    try {
-      const token = await getToken();
-      if (token) {
-        const decodedToken = jwtDecode(token);
-        const userId = decodedToken.userId;
-        const familyInfo = {
-          fullName: username,
-        };
-        await addFamily(userId, familyInfo);
-        await fetchFamilyMembers();
-        setUsername("");
-        setIsModalVisible(false);
-      }
-    } catch (error) {
-      console.error("Error adding family member:", error);
     }
   };
 
@@ -122,6 +99,10 @@ const FamilyTies = () => {
     </TouchableOpacity>
   );
 
+  const handleFamilyMemberAdded = (updatedMembers) => {
+    setFamilyMembers(updatedMembers);
+  };
+
   if (isLoading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -144,7 +125,6 @@ const FamilyTies = () => {
       </View>
 
       {/* Search Bar */}
-
       <View style={styles.searchContainer}>
         <Ionicons
           name="search"
@@ -162,7 +142,6 @@ const FamilyTies = () => {
       </View>
 
       {/* Family Members List */}
-
       {familyMembers.length === 0 && !isLoading ? (
         <View style={styles.emptyStateContainer}>
           <Ionicons name="people-outline" size={48} color="#9991b1" />
@@ -181,54 +160,12 @@ const FamilyTies = () => {
         />
       )}
 
-      {/* Add Beneficiary contant */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={isModalVisible}
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add New Beneficiary</Text>
-            <Text style={styles.modalSubtitle}>
-              Enter the Full Name of the person you want to add to your Family
-              Ties
-            </Text>
-
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Full Name"
-              placeholderTextColor="#999"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="words"
-              autoCorrect={false}
-            />
-
-            <TouchableOpacity
-              style={[
-                styles.confirmButton,
-                !username.trim() && styles.confirmButtonDisabled,
-              ]}
-              onPress={handleAddBeneficiary}
-              disabled={!username.trim()}
-            >
-              <Text style={styles.confirmButtonText}>Add Family Member</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => {
-                setUsername("");
-                setIsModalVisible(false);
-              }}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {/* Add Family Member Modal */}
+      <AddFamilyTies
+        modalVisible={isModalVisible}
+        setModalVisible={setIsModalVisible}
+        onFamilyMemberAdded={handleFamilyMemberAdded}
+      />
 
       {/* Add Family Member Button */}
       <TouchableOpacity
@@ -374,97 +311,6 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
     borderWidth: 2,
     borderColor: "rgba(255, 79, 142, 0.4)",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(20, 30, 48, 0.95)",
-    justifyContent: "flex-start",
-    alignItems: "center",
-    paddingTop: Platform.OS === "ios" ? 120 : 100,
-  },
-  modalContent: {
-    backgroundColor: "#1A2942",
-    borderRadius: 24,
-    padding: 32,
-    width: "90%",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255, 79, 142, 0.4)",
-    shadowColor: "#FF4F8E",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 24,
-    elevation: 16,
-    maxWidth: 400,
-    marginTop: 40,
-  },
-  modalTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#E8F0FE",
-    textAlign: "center",
-    marginBottom: 16,
-    letterSpacing: 0.5,
-  },
-  modalSubtitle: {
-    fontSize: 16,
-    color: "rgba(232, 240, 254, 0.7)",
-    textAlign: "center",
-    marginBottom: 32,
-    lineHeight: 24,
-    paddingHorizontal: 16,
-  },
-  modalInput: {
-    width: "100%",
-    height: 56,
-    borderWidth: 1.5,
-    borderColor: "rgba(255, 79, 142, 0.4)",
-    borderRadius: 16,
-    paddingHorizontal: 20,
-    fontSize: 17,
-    marginBottom: 32,
-    color: "#E8F0FE",
-    backgroundColor: "rgba(255, 79, 142, 0.1)",
-  },
-  confirmButton: {
-    width: "100%",
-    backgroundColor: "#FF4F8E",
-    padding: 18,
-    borderRadius: 16,
-    marginBottom: 16,
-    shadowColor: "#FF4F8E",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  confirmButtonDisabled: {
-    backgroundColor: "rgba(255, 79, 142, 0.5)",
-    shadowOpacity: 0.1,
-  },
-  confirmButtonText: {
-    color: "#E8F0FE",
-    fontSize: 18,
-    fontWeight: "700",
-    textAlign: "center",
-    letterSpacing: 0.5,
-  },
-  cancelButton: {
-    width: "100%",
-    padding: 12,
-    marginTop: 4,
-  },
-  cancelButtonText: {
-    color: "rgba(232, 240, 254, 0.6)",
-    fontSize: 16,
-    fontWeight: "600",
-    textAlign: "center",
   },
   centerContent: {
     justifyContent: "center",
