@@ -154,7 +154,7 @@ const Transactions = () => {
   }
 
   const groupedTransactions = groupTransactionsByDate(
-    profile.transactionHistory
+    profile.transactionHistory.reverse()
   );
   console.log(groupedTransactions);
 
@@ -295,7 +295,7 @@ const Transactions = () => {
                 <Ionicons name="close" size={24} color="#fff" />
               </TouchableOpacity>
               <CalendarPicker
-              style={{ flex: 1 }} 
+                style={{ flex: 1 }}
                 startFromMonday={true}
                 minDate={isStartDate ? undefined : startDate}
                 maxDate={isStartDate ? endDate : undefined}

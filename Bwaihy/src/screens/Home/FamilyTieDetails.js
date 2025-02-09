@@ -14,13 +14,36 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import BusinessIcon from "../../components/BusinessIcon";
 import moment from "moment";
-import businesses from "../../data/businessesData";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { deleteFamily, setLimit } from "../../api/family";
 
 const FamilyTieDetails = ({ route, navigation }) => {
-  const { member } = route.params;
+  const { member, profile } = route.params;
+  const [memberProfile, setMemberProfile] = useState(member);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSendMoneyModal, setShowSendMoneyModal] = useState(false);
   const [amount, setAmount] = useState("");
+
+  const deleteMutation = useMutation({
+    mutationFn: (memberId) => deleteFamily(profile.id, memberId),
+    onSuccess: () => {
+      navigation.goBack();
+    },
+    onError: (error) => {
+      Alert.alert("Error", error.message);
+    },
+  });
+
+  const setLimitMutation = useMutation({
+    mutationFn: (limit) => setLimit(profile.id, limit, memberProfile.id),
+    onSuccess: (data) => {
+      // navigation.goBack();
+      setMemberProfile(data.familyMember);
+    },
+    onError: (error) => {
+      Alert.alert("Error", error.message);
+    },
+  });
 
   const handleDelete = () => {
     setShowDeleteModal(true);
@@ -32,8 +55,8 @@ const FamilyTieDetails = ({ route, navigation }) => {
 
   const confirmDelete = () => {
     // TODO: Implement delete functionality
+    deleteMutation.mutate(memberProfile.id);
     setShowDeleteModal(false);
-    navigation.goBack();
   };
 
   const confirmSendMoney = () => {
@@ -41,24 +64,26 @@ const FamilyTieDetails = ({ route, navigation }) => {
       Alert.alert("Invalid Amount", "Please enter a valid amount");
       return;
     }
-    // TODO: Implement send money functionality
-    navigation.navigate("SendMoney", {
-      recipient: member,
-      amount: parseFloat(amount),
-    });
+    setLimitMutation.mutate(parseFloat(amount));
     setShowSendMoneyModal(false);
     setAmount("");
   };
 
-  console.log(member);
+  // console.log(memberProfile);
   // Transform businesses data into transactions format
-  const transactions = businesses.map((business) => ({
-    id: business.id,
-    business: business.name,
-    date: moment().subtract(business.id, "days").format("YYYY-MM-DD"),
-    amount: -(Math.random() * 50).toFixed(2),
-    icon: business.icon,
+  const transactions = memberProfile.transactions.map((transaction) => ({
+    id: transaction.id,
+    business: transaction.businessName,
+    date: moment(transaction.date).format("YYYY-MM-DD"),
+    amount: transaction.amount,
+    icon: transaction.icon,
   }));
+
+  const totalSent = transactions.reduce(
+    (sum, transaction) => sum + transaction.amount,
+    0
+  );
+  const remainingBalance = memberProfile.walletBalance - totalSent;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -81,7 +106,7 @@ const FamilyTieDetails = ({ route, navigation }) => {
         <View style={styles.memberCard}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
-              {member.fullName
+              {memberProfile.fullName
                 .split(" ")
                 .map((n) => n[0])
                 .join("")
@@ -97,12 +122,14 @@ const FamilyTieDetails = ({ route, navigation }) => {
           <View style={styles.balanceContainer}>
             <View style={styles.balanceItem}>
               <Text style={styles.balanceLabel}>Amount Sent</Text>
-              <Text style={styles.balanceValue}>50 KD</Text>
+              <Text style={styles.balanceValue}>
+                {remainingBalance.toFixed(2)} KD
+              </Text>
             </View>
             <Text style={styles.balanceDivider}>/</Text>
             <View style={styles.balanceItem}>
               <Text style={styles.balanceLabel}>Remaining Balance</Text>
-              <Text style={styles.balanceValue}>15 KD</Text>
+              <Text style={styles.balanceValue}>{totalSent.toFixed(2)} KD</Text>
             </View>
           </View>
 
@@ -170,7 +197,9 @@ const FamilyTieDetails = ({ route, navigation }) => {
               </View>
               <Text style={styles.modalText}>
                 Enter amount to send to{" "}
-                <Text style={styles.highlightedText}>{member.fullName}</Text>
+                <Text style={styles.highlightedText}>
+                  {memberProfile.fullName}
+                </Text>
               </Text>
               <View style={styles.amountInputContainer}>
                 <Text style={styles.currencyText}>KD</Text>
@@ -225,7 +254,9 @@ const FamilyTieDetails = ({ route, navigation }) => {
               </View>
               <Text style={styles.modalText}>
                 Are you sure you want to remove{" "}
-                <Text style={styles.highlightedText}>{member.fullName}</Text>{" "}
+                <Text style={styles.highlightedText}>
+                  {memberProfile.fullName}
+                </Text>{" "}
                 from your family ties?
               </Text>
               <View style={styles.modalButtons}>
