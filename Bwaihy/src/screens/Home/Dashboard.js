@@ -321,12 +321,12 @@ const Dashboard = () => {
             </ScrollView>
           </View>
 
-           {/* Add Family Ties Modal */}
-        <AddFamilyTies
-          modalVisible={modalVisible}
-          setModalVisible={setModalVisible}
-          onFamilyMemberAdded={handleFamilyMemberAdded}
-        />
+          {/* Add Family Ties Modal */}
+          <AddFamilyTies
+            modalVisible={modalVisible}
+            setModalVisible={setModalVisible}
+            onFamilyMemberAdded={handleFamilyMemberAdded}
+          />
 
           {/* Transactions Section */}
           <View style={styles.section}>
@@ -383,8 +383,6 @@ const Dashboard = () => {
             </TouchableOpacity>
           </View>
         </ScrollView>
-
-       
       </View>
     </SafeAreaView>
   );

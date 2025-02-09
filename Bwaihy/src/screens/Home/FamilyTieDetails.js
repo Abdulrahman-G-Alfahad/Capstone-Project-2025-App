@@ -23,6 +23,7 @@ const FamilyTieDetails = ({ route, navigation }) => {
   const [memberProfile, setMemberProfile] = useState(member);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSendMoneyModal, setShowSendMoneyModal] = useState(false);
+  const [isTransactionsCollapsed, setIsTransactionsCollapsed] = useState(false);
   const [amount, setAmount] = useState("");
   const [errors, setErrors] = useState({});
 
@@ -98,6 +99,10 @@ const FamilyTieDetails = ({ route, navigation }) => {
   );
   const remainingBalance = memberProfile.walletBalance - totalSent;
 
+  const toggleTransactions = () => {
+    setIsTransactionsCollapsed(!isTransactionsCollapsed);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -155,31 +160,56 @@ const FamilyTieDetails = ({ route, navigation }) => {
 
         {/* Transaction History */}
         <View style={styles.transactionSection}>
-          <Text style={styles.sectionTitle}>Transaction History</Text>
-          <ScrollView
-            style={styles.transactionList}
-            showsVerticalScrollIndicator={false}
-            showsHorizontalScrollIndicator={false}
+          <TouchableOpacity
+            style={styles.sectionHeader}
+            onPress={toggleTransactions}
           >
-            {transactions.map((transaction) => (
-              <View key={transaction.id} style={styles.transactionItem}>
-                <View style={styles.transactionLeft}>
-                  <BusinessIcon businessName={transaction.business} />
-                  <View style={styles.transactionInfo}>
-                    <Text style={styles.businessName}>
-                      {transaction.business}
-                    </Text>
-                    <Text style={styles.transactionDate}>
-                      {moment(transaction.date).format("MMMM D, YYYY")}
+            <Text style={styles.sectionTitle}>Transaction History</Text>
+            <Ionicons
+              name={isTransactionsCollapsed ? "chevron-down" : "chevron-up"}
+              size={24}
+              color="#E8F0FE"
+            />
+          </TouchableOpacity>
+
+          {!isTransactionsCollapsed && (
+            <ScrollView
+              style={styles.transactionList}
+              showsVerticalScrollIndicator={false}
+              showsHorizontalScrollIndicator={false}
+            >
+              {transactions.length > 0 ? (
+                transactions.map((transaction) => (
+                  <View key={transaction.id} style={styles.transactionItem}>
+                    <View style={styles.transactionLeft}>
+                      <BusinessIcon businessName={transaction.business} />
+                      <View style={styles.transactionInfo}>
+                        <Text style={styles.businessName}>
+                          {transaction.business}
+                        </Text>
+                        <Text style={styles.transactionDate}>
+                          {moment(transaction.date).format("MMMM D, YYYY")}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={styles.transactionAmount}>
+                      {transaction.amount.toFixed(2)} KD
                     </Text>
                   </View>
+                ))
+              ) : (
+                <View style={styles.emptyTransactionsContainer}>
+                  <Ionicons name="receipt-outline" size={48} color="#A78BFA" />
+                  <Text style={styles.emptyTransactionsText}>
+                    No transactions yet
+                  </Text>
+                  <Text style={styles.emptyTransactionsSubText}>
+                    Transactions will appear here once money is sent
+                  </Text>
                 </View>
-                <Text style={styles.transactionAmount}>
-                  {transaction.amount.toFixed(2)} KD
-                </Text>
-              </View>
-            ))}
-          </ScrollView>
+              )}
+            </ScrollView>
+          )}
         </View>
 
         {/* Send Money Modal */}
@@ -256,36 +286,41 @@ const FamilyTieDetails = ({ route, navigation }) => {
           onRequestClose={() => setShowDeleteModal(false)}
         >
           <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
+            <View style={styles.modalView}>
+              <TouchableOpacity
+                onPress={() => setShowDeleteModal(false)}
+                style={styles.closeButton}
+              >
+                <Ionicons name="close" size={28} color="#9991b1" />
+              </TouchableOpacity>
+
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Delete Family Tie</Text>
-                <TouchableOpacity
-                  onPress={() => setShowDeleteModal(false)}
-                  style={styles.closeButton}
-                >
-                  <Ionicons name="close" size={24} color="#9991b1" />
-                </TouchableOpacity>
               </View>
-              <Text style={styles.modalText}>
-                Are you sure you want to remove{" "}
-                <Text style={styles.highlightedText}>
-                  {memberProfile.fullName}
-                </Text>{" "}
-                from your family ties?
-              </Text>
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton]}
-                  onPress={() => setShowDeleteModal(false)}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.confirmButton]}
-                  onPress={confirmDelete}
-                >
-                  <Text style={styles.confirmButtonText}>Delete</Text>
-                </TouchableOpacity>
+
+              <View style={styles.modalContent}>
+                <Text style={styles.modalText}>
+                  Are you sure you want to remove{" "}
+                  <Text style={styles.highlightedText}>
+                    {memberProfile.fullName}
+                  </Text>{" "}
+                  from your family ties?
+                </Text>
+
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.cancelButton]}
+                    onPress={() => setShowDeleteModal(false)}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.confirmButton]}
+                    onPress={confirmDelete}
+                  >
+                    <Text style={styles.confirmButtonText}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           </View>
@@ -531,19 +566,11 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   modalButton: {
-    width: "100%",
-    backgroundColor: "#A78BFA",
+    flex: 1,
     padding: 18,
     borderRadius: 16,
-    marginBottom: 16,
-    shadowColor: "#A78BFA",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 5.46,
-    elevation: 9,
+    alignItems: "center",
+    justifyContent: "center",
   },
   modalButtonDisabled: {
     backgroundColor: "rgba(167, 139, 250, 0.3)",
@@ -579,6 +606,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     lineHeight: 24,
     fontWeight: "500",
+    marginBottom: 8,
   },
   highlightedText: {
     color: "#E8F0FE",
@@ -589,6 +617,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
     marginTop: 24,
+    width: "100%",
   },
   cancelButton: {
     backgroundColor: "rgba(167, 139, 250, 0.05)",
@@ -607,7 +636,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   cancelButtonText: {
-    color: "#A78BFA",
+    color: "#E8F0FE",
     fontSize: 16,
     fontWeight: "700",
   },
@@ -615,6 +644,34 @@ const styles = StyleSheet.create({
     color: "#E8F0FE",
     fontSize: 16,
     fontWeight: "700",
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  emptyTransactionsContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 32,
+    backgroundColor: "rgba(167, 139, 250, 0.05)",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
+  },
+  emptyTransactionsText: {
+    color: "#E8F0FE",
+    fontSize: 18,
+    fontWeight: "700",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyTransactionsSubText: {
+    color: "#E8F0FE",
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 20,
   },
 });
 

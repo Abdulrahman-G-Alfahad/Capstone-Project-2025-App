@@ -1,18 +1,52 @@
-import React, { useState, useCallback } from "react";
-import { View, Text, TouchableOpacity, Modal, TextInput } from "react-native";
+import React, { useState, useCallback, useEffect, useContext } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  ScrollView,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import UserContext from "../context/UserContext";
+import { getFamily } from "../api/family";
+import { getToken } from "../api/storage";
+import { jwtDecode } from "jwt-decode";
 
 const SendMoneyButton = () => {
   const [sendModalVisible, setSendModalVisible] = useState(false);
   const [sendAmount, setSendAmount] = useState("");
-  const [recipientName, setRecipientName] = useState("");
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [familyMembers, setFamilyMembers] = useState([]);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
   const [errors, setErrors] = useState({});
+  const { user } = useContext(UserContext);
+
+  useEffect(() => {
+    if (sendModalVisible) {
+      fetchFamilyMembers();
+    }
+  }, [sendModalVisible]);
+
+  const fetchFamilyMembers = async () => {
+    try {
+      const token = await getToken();
+      if (token) {
+        const decodedToken = jwtDecode(token);
+        const userId = decodedToken.userId;
+        const response = await getFamily(userId);
+        setFamilyMembers(response.familyMembers);
+      }
+    } catch (error) {
+      console.error("Error fetching family members:", error);
+    }
+  };
 
   const validateForm = useCallback(() => {
     const newErrors = {};
-    if (!recipientName.trim()) {
-      newErrors.recipientName = "Recipient name is required";
+    if (!selectedMember) {
+      newErrors.recipient = "Please select a recipient";
     }
     if (!sendAmount.trim()) {
       newErrors.amount = "Amount is required";
@@ -22,10 +56,10 @@ const SendMoneyButton = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [recipientName, sendAmount]);
+  }, [selectedMember, sendAmount]);
 
   const isFormValid =
-    recipientName.trim() &&
+    selectedMember &&
     sendAmount.trim() &&
     !isNaN(sendAmount) &&
     Number(sendAmount) > 0;
@@ -38,11 +72,31 @@ const SendMoneyButton = () => {
       // Add your send money logic here
       setSendModalVisible(false);
       setSendAmount("");
-      setRecipientName("");
+      setSelectedMember(null);
       setErrors({});
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const resetModal = () => {
+    setSendModalVisible(false);
+    setSendAmount("");
+    setSelectedMember(null);
+    setDropdownVisible(false);
+    setErrors({});
+  };
+
+  const getInputContainerStyle = () => {
+    return [
+      styles.inputContainer,
+      dropdownVisible && {
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
+        borderBottomWidth: 0,
+        borderColor: "#0D9488",
+      },
+    ];
   };
 
   return (
@@ -63,19 +117,11 @@ const SendMoneyButton = () => {
         animationType="slide"
         transparent={true}
         visible={sendModalVisible}
-        onRequestClose={() => setSendModalVisible(false)}
+        onRequestClose={resetModal}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalView}>
-            <TouchableOpacity
-              onPress={() => {
-                setSendModalVisible(false);
-                setSendAmount("");
-                setRecipientName("");
-                setErrors({});
-              }}
-              style={styles.closeButton}
-            >
+            <TouchableOpacity onPress={resetModal} style={styles.closeButton}>
               <Ionicons name="close" size={28} color="#9991b1" />
             </TouchableOpacity>
 
@@ -84,19 +130,75 @@ const SendMoneyButton = () => {
             </View>
 
             <View style={styles.modalContent}>
-              <View style={styles.inputContainer}>
-                <Ionicons name="person-outline" size={24} color="#8e8ba7" />
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="Recipient Name"
-                  placeholderTextColor="#8e8ba7"
-                  value={recipientName}
-                  onChangeText={setRecipientName}
-                />
+              {/* Family Member Selection */}
+              <View style={styles.dropdownContainer}>
+                <TouchableOpacity
+                  style={getInputContainerStyle()}
+                  onPress={() => setDropdownVisible(!dropdownVisible)}
+                >
+                  <Ionicons name="people-outline" size={24} color="#8e8ba7" />
+                  <Text
+                    style={[
+                      styles.modalInput,
+                      !selectedMember && styles.placeholderText,
+                    ]}
+                  >
+                    {selectedMember
+                      ? selectedMember.fullName
+                      : "Select Family Member"}
+                  </Text>
+                  <Ionicons
+                    name={dropdownVisible ? "chevron-up" : "chevron-down"}
+                    size={20}
+                    color={dropdownVisible ? "#0D9488" : "#8e8ba7"}
+                  />
+                </TouchableOpacity>
+                {errors.recipient && (
+                  <Text style={styles.errorText}>{errors.recipient}</Text>
+                )}
+
+                {dropdownVisible && (
+                  <View style={styles.dropdownList}>
+                    <ScrollView
+                      style={styles.dropdownScroll}
+                      showsVerticalScrollIndicator={false}
+                    >
+                      {familyMembers.map((member) => (
+                        <TouchableOpacity
+                          key={member.id}
+                          style={[
+                            styles.dropdownItem,
+                            selectedMember?.id === member.id &&
+                              styles.dropdownItemSelected,
+                          ]}
+                          onPress={() => {
+                            setSelectedMember(member);
+                            setDropdownVisible(false);
+                          }}
+                        >
+                          <Text style={styles.dropdownItemText}>
+                            {member.fullName}
+                          </Text>
+                          {selectedMember?.id === member.id && (
+                            <Ionicons
+                              name="checkmark"
+                              size={20}
+                              color="#0D9488"
+                            />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                      {familyMembers.length === 0 && (
+                        <View style={styles.noMembersContainer}>
+                          <Text style={styles.noMembersText}>
+                            No family members found
+                          </Text>
+                        </View>
+                      )}
+                    </ScrollView>
+                  </View>
+                )}
               </View>
-              {errors.recipientName && (
-                <Text style={styles.errorText}>{errors.recipientName}</Text>
-              )}
 
               <View style={styles.inputContainer}>
                 <Ionicons name="wallet-outline" size={24} color="#8e8ba7" />
@@ -196,17 +298,18 @@ const styles = {
   modalContent: {
     width: "100%",
     alignItems: "center",
+    position: "relative",
   },
   inputContainer: {
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(13, 148, 136, 0.05)",
+    backgroundColor: "#1A2942",
     borderRadius: 16,
     padding: 16,
-    marginBottom: 8,
     borderWidth: 1,
     borderColor: "rgba(13, 148, 136, 0.2)",
+    zIndex: 1,
   },
   modalInput: {
     flex: 1,
@@ -255,6 +358,65 @@ const styles = {
     marginBottom: 12,
     alignSelf: "flex-start",
     marginLeft: 4,
+  },
+  dropdownContainer: {
+    width: "100%",
+    position: "relative",
+    marginBottom: 8,
+    zIndex: 2,
+  },
+  dropdownList: {
+    position: "absolute",
+    top: "100%",
+    marginTop: -1,
+    left: 0,
+    right: 0,
+    backgroundColor: "#1A2942",
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    maxHeight: 200,
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: "rgba(13, 148, 136, 0.2)",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
+    overflow: "hidden",
+    zIndex: 3,
+  },
+  dropdownItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(13, 148, 136, 0.1)",
+    backgroundColor: "#1A2942",
+  },
+  dropdownItemSelected: {
+    backgroundColor: "rgba(13, 148, 136, 0.15)",
+  },
+  dropdownItemText: {
+    color: "#E8F0FE",
+    fontSize: 16,
+    marginLeft: 34,
+  },
+  dropdownScroll: {
+    width: "100%",
+  },
+  noMembersContainer: {
+    padding: 16,
+    alignItems: "center",
+    backgroundColor: "#1A2942",
+  },
+  noMembersText: {
+    color: "#8e8ba7",
+    fontSize: 14,
   },
 };
 

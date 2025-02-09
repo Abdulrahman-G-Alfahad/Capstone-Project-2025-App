@@ -102,7 +102,7 @@ const AddFamilyTies = ({
           </TouchableOpacity>
 
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add Family Member</Text>
+            <Text style={styles.modalTitle}>Add a New Tie</Text>
           </View>
 
           <View style={styles.form}>
