@@ -15,7 +15,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { register } from "../../api/auth";
 import { useMutation } from "@tanstack/react-query";
 import UserContext from "../../context/UserContext";
-import FaceIDSetup from "../../components/FaceIDSetup";
 import FaceID from "../../components/FaceID";
 
 const Register = () => {
@@ -31,7 +30,6 @@ const Register = () => {
   const [address, setAddress] = useState("");
   const [username, setUsername] = useState("");
   const { user, setUser } = useContext(UserContext);
-  const [showFaceIDSetup, setShowFaceIDSetup] = useState(false);
   const [showFaceID, setShowFaceID] = useState(false);
   const [faceId, setFaceId] = useState("");
 
@@ -83,11 +81,6 @@ const Register = () => {
 
     console.log("Registering user with data:", userInfo);
     mutate();
-  };
-
-  const handleFaceIDSetupConfirm = () => {
-    setShowFaceIDSetup(false);
-    setShowFaceID(true);
   };
 
   const handleFaceIDSuccess = (data) => {
@@ -305,7 +298,7 @@ const Register = () => {
     <View style={styles.faceIdStep}>
       <TouchableOpacity
         style={styles.faceIdButton}
-        onPress={() => setShowFaceIDSetup(true)}
+        onPress={() => setShowFaceID(true)}
       >
         <Ionicons name="scan-outline" size={24} color="#fff" />
         <Text style={styles.faceIdButtonText}>
@@ -375,13 +368,6 @@ const Register = () => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <FaceIDSetup
-        isVisible={showFaceIDSetup}
-        onClose={() => setShowFaceIDSetup(false)}
-        onConfirm={handleFaceIDSetupConfirm}
-        mode="enroll"
-      />
-
       <FaceID
         isVisible={showFaceID}
         onClose={() => setShowFaceID(false)}
@@ -401,15 +387,25 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: 60,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingBottom: 16,
     backgroundColor: "#141E30",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(167, 139, 250, 0.2)",
+    alignItems: "center",
+    shadowColor: "#A78BFA",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "800",
     color: "#E8F0FE",
-    textAlign: "center",
+    letterSpacing: 0.5,
   },
   scrollContent: {
     flexGrow: 1,
@@ -463,7 +459,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   faceIdButton: {
-    backgroundColor: "rgba(167, 139, 250, 0.15)",
+    backgroundColor: "rgba(232, 240, 254, 0.15)",
     borderRadius: 16,
     padding: 18,
     alignItems: "center",
@@ -471,7 +467,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "rgba(167, 139, 250, 0.2)",
+    borderColor: "#E8F0FE",
   },
   faceIdButtonText: {
     color: "#E8F0FE",
@@ -504,8 +500,8 @@ const styles = StyleSheet.create({
     borderColor: "#8e8ba7",
   },
   activeStep: {
-    backgroundColor: "#6C63FF",
-    borderColor: "#6C63FF",
+    backgroundColor: "#A78BFA",
+    borderColor: "#A78BFA",
   },
   stepLine: {
     width: 50,
@@ -514,7 +510,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   activeStepLine: {
-    backgroundColor: "#6C63FF",
+    backgroundColor: "#A78BFA",
   },
   stepLabel: {
     color: "#8e8ba7",
@@ -524,7 +520,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   activeStepLabel: {
-    color: "#6C63FF",
+    color: "#A78BFA",
   },
   navigationButtons: {
     flexDirection: "row",
@@ -545,12 +541,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   nextButton: {
-    backgroundColor: "#FF4F8E",
+    backgroundColor: "#A78BFA",
     padding: 18,
     borderRadius: 16,
     flex: 1,
     marginLeft: 8,
-    shadowColor: "#FF4F8E",
+    shadowColor: "#A78BFA",
     shadowOffset: {
       width: 0,
       height: 8,

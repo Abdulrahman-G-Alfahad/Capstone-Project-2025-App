@@ -256,25 +256,21 @@ const Dashboard = () => {
 
           {/* Balance Card */}
           <View style={styles.balanceCard}>
-            <View style={styles.balanceHeader}>
-              <View>
-                <Text style={styles.balanceLabel}>Total Balance</Text>
-                <View style={styles.balanceRow}>
-                  <Text style={styles.balanceAmount}>
-                    {formatBalance(profile?.walletBalance)} KD
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.visibilityButton}
-                    onPress={() => setIsBalanceHidden(!isBalanceHidden)}
-                  >
-                    <Ionicons
-                      name={isBalanceHidden ? "eye-off-outline" : "eye-outline"}
-                      size={24}
-                      color="#9991b1"
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
+            <Text style={styles.balanceLabel}>Total Balance</Text>
+            <View style={styles.balanceRow}>
+              <Text style={styles.balanceAmount}>
+                {formatBalance(profile?.walletBalance)} KD
+              </Text>
+              <TouchableOpacity
+                style={styles.visibilityButton}
+                onPress={() => setIsBalanceHidden(!isBalanceHidden)}
+              >
+                <Ionicons
+                  name={isBalanceHidden ? "eye-off-outline" : "eye-outline"}
+                  size={24}
+                  color="#9991b1"
+                />
+              </TouchableOpacity>
             </View>
 
             <View style={styles.balanceActions}>
@@ -324,6 +320,13 @@ const Dashboard = () => {
               </View>
             </ScrollView>
           </View>
+
+           {/* Add Family Ties Modal */}
+        <AddFamilyTies
+          modalVisible={modalVisible}
+          setModalVisible={setModalVisible}
+          onFamilyMemberAdded={handleFamilyMemberAdded}
+        />
 
           {/* Transactions Section */}
           <View style={styles.section}>
@@ -381,12 +384,7 @@ const Dashboard = () => {
           </View>
         </ScrollView>
 
-        {/* Add Family Ties Modal */}
-        <AddFamilyTies
-          modalVisible={modalVisible}
-          setModalVisible={setModalVisible}
-          onFamilyMemberAdded={handleFamilyMemberAdded}
-        />
+       
       </View>
     </SafeAreaView>
   );
@@ -466,9 +464,9 @@ const styles = StyleSheet.create({
   },
   balanceCard: {
     backgroundColor: "rgba(167, 139, 250, 0.05)",
-    borderRadius: 24,
-    padding: 24,
-    marginVertical: 16,
+    borderRadius: 20,
+    padding: 20,
+    marginVertical: 12,
     borderWidth: 1,
     borderColor: "rgba(167, 139, 250, 0.2)",
     shadowColor: "#A78BFA",
@@ -480,44 +478,35 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 8,
   },
-  balanceHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 24,
-  },
   balanceLabel: {
     color: "#A78BFA",
-    fontSize: 18,
-    marginBottom: 8,
+    fontSize: 15,
     fontWeight: "600",
     letterSpacing: 0.5,
+    opacity: 0.9,
+    marginBottom: 8,
   },
   balanceRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-  },
-  visibilityButton: {
-    padding: 8,
-    backgroundColor: "rgba(167, 139, 250, 0.1)",
-    borderRadius: 50,
-    width: 40,
-    height: 40,
-    borderWidth: 1,
-    borderColor: "rgba(167, 139, 250, 0.2)",
-    alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
   },
   balanceAmount: {
     color: "#E8F0FE",
-    fontSize: 40,
-    fontWeight: "800",
+    fontSize: 32,
+    fontWeight: "700",
     fontFamily: Platform.OS === "ios" ? "Helvetica Neue" : "sans-serif",
     letterSpacing: 0.5,
     textShadowColor: "rgba(167, 139, 250, 0.3)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+  },
+  visibilityButton: {
+    padding: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 4,
   },
   section: {
     marginBottom: 24,
@@ -544,7 +533,7 @@ const styles = StyleSheet.create({
   },
   familyTiesContainer: {
     flexDirection: "row",
-    gap: 20,
+    gap: 15,
     paddingHorizontal: 8,
     paddingVertical: 8,
   },
@@ -709,8 +698,8 @@ const styles = StyleSheet.create({
   balanceActions: {
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: 16,
-    marginTop: 12,
+    gap: 12,
+    marginTop: 8,
   },
   actionButton: {
     flex: 1,

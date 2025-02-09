@@ -82,16 +82,12 @@ const Login = () => {
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.welcomeText}>Welcome Back!</Text>
+        <Text style={styles.welcomeText}>Welcome Back</Text>
         <Text style={styles.subText}>Sign in to Continue</Text>
 
         <View style={styles.form}>
           <View style={styles.inputContainer}>
-          <Ionicons
-                  name="person-circle-outline"
-                  size={24}
-                  color="#8e8ba7"
-                />
+            <Ionicons name="person-circle-outline" size={24} color="#8e8ba7" />
             <TextInput
               style={styles.input}
               placeholder="User Name"
@@ -146,41 +142,49 @@ const styles = StyleSheet.create({
     backgroundColor: "#141E30",
   },
   header: {
-    paddingTop: Platform.OS === "ios" ? 60 : 40,
-    paddingHorizontal: 24,
-    paddingBottom: 20,
+    paddingTop: 60,
+    paddingBottom: 16,
     backgroundColor: "#141E30",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(167, 139, 250, 0.2)",
+    alignItems: "center",
+    shadowColor: "#A78BFA",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "800",
     color: "#E8F0FE",
-    textAlign: "center",
+    letterSpacing: 0.5,
   },
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 20,
-    justifyContent: "center",
-    marginTop: -150,
+    paddingTop: 40,
+    paddingBottom: 20,
   },
   welcomeText: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "800",
     color: "#E8F0FE",
     textAlign: "center",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   subText: {
     fontSize: 16,
     color: "#A78BFA",
-    marginBottom: 40,
+    marginBottom: 48,
     textAlign: "center",
     fontWeight: "500",
   },
   form: {
     width: "100%",
-    paddingHorizontal: 10,
   },
   inputContainer: {
     flexDirection: "row",
@@ -189,12 +193,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     marginBottom: 20,
-    height: 56,
+    height: 65,
   },
   input: {
     flex: 1,
     color: "#E8F0FE",
-    paddingVertical: 12,
+    paddingVertical: 16,
     marginLeft: 12,
     fontSize: 16,
   },
@@ -202,11 +206,11 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   loginButton: {
-    backgroundColor: "#FF4F8E",
-    padding: 16,
+    backgroundColor: "#A78BFA",
+    padding: 20,
     borderRadius: 16,
-    marginTop: 60,
-    shadowColor: "#FF4F8E",
+    marginTop: 40,
+    shadowColor: "#A78BFA",
     shadowOffset: {
       width: 0,
       height: 8,
@@ -238,9 +242,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   faceIdButton: {
-    backgroundColor: "rgba(167, 139, 250, 0.15)",
+    backgroundColor: "#0D9488",
     borderRadius: 16,
-    padding: 16,
+    padding: 18,
     alignItems: "center",
     marginTop: 16,
     flexDirection: "row",

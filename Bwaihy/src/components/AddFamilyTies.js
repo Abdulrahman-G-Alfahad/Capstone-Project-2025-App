@@ -94,14 +94,15 @@ const AddFamilyTies = ({
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setModalVisible(false)}
+          >
+            <Ionicons name="close" size={24} color="#E8F0FE" />
+          </TouchableOpacity>
+
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Add Family Member</Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Ionicons name="close" size={24} color="#E8F0FE" />
-            </TouchableOpacity>
           </View>
 
           <View style={styles.form}>
@@ -192,50 +193,70 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "#141E30",
+    backgroundColor: "#1A2942",
     borderRadius: 24,
-    padding: 24,
+    padding: 32,
     width: "90%",
-    maxHeight: "80%",
+    alignItems: "center",
+    shadowColor: "#A78BFA",
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 16,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
+    position: "relative",
   },
   modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    width: "100%",
     marginBottom: 24,
+    paddingTop: 8,
   },
   modalTitle: {
-    fontSize: 24,
-    fontWeight: "700",
+    fontSize: 28,
+    fontWeight: "800",
     color: "#E8F0FE",
+    textAlign: "center",
+    letterSpacing: 0.5,
   },
   closeButton: {
+    position: "absolute",
+    right: 8,
+    top: 8,
     padding: 8,
+    zIndex: 1,
   },
   form: {
     width: "100%",
+    alignItems: "center",
   },
   inputContainer: {
+    width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(142, 139, 167, 0.1)",
+    backgroundColor: "rgba(167, 139, 250, 0.05)",
     borderRadius: 16,
-    paddingHorizontal: 16,
-    marginBottom: 16,
+    padding: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
   },
   input: {
     flex: 1,
     color: "#E8F0FE",
-    paddingVertical: 16,
-    marginLeft: 12,
     fontSize: 16,
+    marginLeft: 10,
   },
   modalButton: {
-    backgroundColor: "#FF4F8E",
+    width: "100%",
+    backgroundColor: "#0D9488",
     padding: 18,
     borderRadius: 16,
-    marginTop: 8,
-    shadowColor: "#FF4F8E",
+    marginBottom: 16,
+    shadowColor: "#0D9488",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -245,20 +266,20 @@ const styles = StyleSheet.create({
     elevation: 9,
   },
   modalButtonDisabled: {
-    backgroundColor: "rgba(255, 79, 142, 0.5)",
+    backgroundColor: "rgba(167, 139, 250, 0.3)",
     shadowOpacity: 0,
   },
   modalButtonText: {
-    color: "#E8F0FE",
+    color: "#fff",
     fontSize: 18,
     fontWeight: "700",
     textAlign: "center",
   },
   modalButtonTextDisabled: {
-    color: "rgba(232, 240, 254, 0.5)",
+    color: "rgba(255, 255, 255, 0.5)",
   },
   errorText: {
-    color: "#FF4F8E",
+    color: "#A78BFA",
     fontSize: 12,
     marginBottom: 12,
     alignSelf: "flex-start",
@@ -269,12 +290,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FF4F8E",
+    backgroundColor: "#A78BFA",
     padding: 18,
     borderRadius: 16,
-    marginTop: 15,
-    marginBottom: 8,
-    shadowColor: "#FF4F8E",
+    marginTop: 8,
+    marginBottom: 16,
+    shadowColor: "#A78BFA",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -284,7 +305,7 @@ const styles = StyleSheet.create({
     elevation: 9,
   },
   faceIdButtonText: {
-    color: "#E8F0FE",
+    color: "#fff",
     fontSize: 18,
     fontWeight: "700",
     marginLeft: 12,

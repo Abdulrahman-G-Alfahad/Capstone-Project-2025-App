@@ -76,7 +76,7 @@ const SendMoneyButton = () => {
               }}
               style={styles.closeButton}
             >
-              <Ionicons name="close-circle" size={28} color="#9991b1" />
+              <Ionicons name="close" size={28} color="#9991b1" />
             </TouchableOpacity>
 
             <View style={styles.modalHeader}>
@@ -149,7 +149,7 @@ const styles = {
     gap: 8,
   },
   sendButton: {
-    backgroundColor: "#5B21B6",
+    backgroundColor: "#0D9488",
     fontWeight: "700",
   },
   actionButtonText: {
@@ -169,7 +169,7 @@ const styles = {
     padding: 32,
     width: "90%",
     alignItems: "center",
-    shadowColor: "#5B21B6",
+    shadowColor: "#0D9488",
     shadowOffset: {
       width: 0,
       height: 8,
@@ -178,7 +178,7 @@ const styles = {
     shadowRadius: 24,
     elevation: 16,
     borderWidth: 1,
-    borderColor: "rgba(91, 33, 182, 0.2)",
+    borderColor: "rgba(13, 148, 136, 0.2)",
     position: "relative",
   },
   modalHeader: {
@@ -201,12 +201,12 @@ const styles = {
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(91, 33, 182, 0.05)",
+    backgroundColor: "rgba(13, 148, 136, 0.05)",
     borderRadius: 16,
     padding: 16,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: "rgba(91, 33, 182, 0.2)",
+    borderColor: "rgba(13, 148, 136, 0.2)",
   },
   modalInput: {
     flex: 1,
@@ -216,11 +216,11 @@ const styles = {
   },
   modalButton: {
     width: "100%",
-    backgroundColor: "#5B21B6",
+    backgroundColor: "#0D9488",
     padding: 18,
     borderRadius: 16,
     marginBottom: 16,
-    shadowColor: "#5B21B6",
+    shadowColor: "#0D9488",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -230,7 +230,7 @@ const styles = {
     elevation: 9,
   },
   modalButtonDisabled: {
-    backgroundColor: "rgba(91, 33, 182, 0.3)",
+    backgroundColor: "rgba(13, 148, 136, 0.3)",
     shadowOpacity: 0,
   },
   modalButtonText: {
@@ -250,7 +250,7 @@ const styles = {
     zIndex: 1,
   },
   errorText: {
-    color: "#5B21B6",
+    color: "#0D9488",
     fontSize: 12,
     marginBottom: 12,
     alignSelf: "flex-start",
