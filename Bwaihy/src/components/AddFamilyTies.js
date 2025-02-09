@@ -6,11 +6,13 @@ import {
   Modal,
   TextInput,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { getToken } from "../api/storage";
 import { jwtDecode } from "jwt-decode";
 import { addFamily, getFamily } from "../api/family";
+import FaceID from "./FaceID";
 
 const AddFamilyTies = ({
   modalVisible,
@@ -21,6 +23,7 @@ const AddFamilyTies = ({
   const [walletBalance, setWalletBalance] = useState("");
   const [faceId, setFaceId] = useState("");
   const [errors, setErrors] = useState({});
+  const [showFaceID, setShowFaceID] = useState(false);
 
   const validateForm = useCallback(() => {
     const newErrors = {};
@@ -65,6 +68,23 @@ const AddFamilyTies = ({
     }
   };
 
+  const handleFaceIDPress = () => {
+    console.log("Face ID button pressed");
+    setShowFaceID(true);
+  };
+
+  const handleFaceIDSuccess = (data) => {
+    console.log("Face ID success:", data);
+    setFaceId(data.facialId);
+    setShowFaceID(false);
+    Alert.alert("Success", "Face ID has been set successfully!");
+  };
+
+  const handleFaceIDClose = () => {
+    console.log("Face ID modal closed");
+    setShowFaceID(false);
+  };
+
   return (
     <Modal
       animationType="slide"
@@ -73,29 +93,23 @@ const AddFamilyTies = ({
       onRequestClose={() => setModalVisible(false)}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalView}>
+        <View style={styles.modalContent}>
           <TouchableOpacity
-            onPress={() => {
-              setModalVisible(false);
-              setErrors({});
-              setFullName("");
-              setWalletBalance("");
-              setFaceId("");
-            }}
             style={styles.closeButton}
+            onPress={() => setModalVisible(false)}
           >
-            <Ionicons name="close-circle" size={28} color="#9991b1" />
+            <Ionicons name="close" size={24} color="#E8F0FE" />
           </TouchableOpacity>
 
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add A Family Tie</Text>
+            <Text style={styles.modalTitle}>Add a New Tie</Text>
           </View>
 
-          <View style={styles.modalContent}>
+          <View style={styles.form}>
             <View style={styles.inputContainer}>
               <Ionicons name="person-outline" size={24} color="#8e8ba7" />
               <TextInput
-                style={styles.modalInput}
+                style={styles.input}
                 placeholder="Full Name"
                 placeholderTextColor="#8e8ba7"
                 value={fullName}
@@ -109,7 +123,7 @@ const AddFamilyTies = ({
             <View style={styles.inputContainer}>
               <Ionicons name="wallet-outline" size={24} color="#8e8ba7" />
               <TextInput
-                style={styles.modalInput}
+                style={styles.input}
                 placeholder="Wallet Balance"
                 placeholderTextColor="#8e8ba7"
                 value={walletBalance}
@@ -121,16 +135,15 @@ const AddFamilyTies = ({
               <Text style={styles.errorText}>{errors.walletBalance}</Text>
             )}
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="scan-outline" size={24} color="#8e8ba7" />
-              <TextInput
-                style={styles.modalInput}
-                placeholder="Face ID"
-                placeholderTextColor="#8e8ba7"
-                value={faceId}
-                onChangeText={setFaceId}
-              />
-            </View>
+            <TouchableOpacity
+              style={[styles.faceIdButton]}
+              onPress={handleFaceIDPress}
+            >
+              <Ionicons name="scan-outline" size={24} color="#E8F0FE" />
+              <Text style={styles.faceIdButtonText}>
+                {faceId ? "Face ID Set ✓" : "Set Up Face ID"}
+              </Text>
+            </TouchableOpacity>
             {errors.faceId && (
               <Text style={styles.errorText}>{errors.faceId}</Text>
             )}
@@ -155,6 +168,19 @@ const AddFamilyTies = ({
           </View>
         </View>
       </View>
+
+      <FaceID
+        isVisible={showFaceID}
+        onClose={handleFaceIDClose}
+        onSuccess={handleFaceIDSuccess}
+        userData={{
+          email: "family@member.com",
+          username: fullName || "Family Member",
+          fullName: fullName || "Family Member",
+        }}
+        mode="enroll"
+        setFaceId={setFaceId}
+      />
     </Modal>
   );
 };
@@ -166,7 +192,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  modalView: {
+  modalContent: {
     backgroundColor: "#1A2942",
     borderRadius: 24,
     padding: 32,
@@ -196,7 +222,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     letterSpacing: 0.5,
   },
-  modalContent: {
+  closeButton: {
+    position: "absolute",
+    right: 8,
+    top: 8,
+    padding: 8,
+    zIndex: 1,
+  },
+  form: {
     width: "100%",
     alignItems: "center",
   },
@@ -211,7 +244,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(167, 139, 250, 0.2)",
   },
-  modalInput: {
+  input: {
     flex: 1,
     color: "#E8F0FE",
     fontSize: 16,
@@ -219,11 +252,11 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     width: "100%",
-    backgroundColor: "#A78BFA",
+    backgroundColor: "#0D9488",
     padding: 18,
     borderRadius: 16,
     marginBottom: 16,
-    shadowColor: "#A78BFA",
+    shadowColor: "#0D9488",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -245,19 +278,37 @@ const styles = StyleSheet.create({
   modalButtonTextDisabled: {
     color: "rgba(255, 255, 255, 0.5)",
   },
-  closeButton: {
-    position: "absolute",
-    right: 16,
-    top: 16,
-    padding: 8,
-    zIndex: 1,
-  },
   errorText: {
-    color: "#FF4F8E",
+    color: "#A78BFA",
     fontSize: 12,
     marginBottom: 12,
     alignSelf: "flex-start",
     marginLeft: 4,
+  },
+  faceIdButton: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#A78BFA",
+    padding: 18,
+    borderRadius: 16,
+    marginTop: 8,
+    marginBottom: 16,
+    shadowColor: "#A78BFA",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 5.46,
+    elevation: 9,
+  },
+  faceIdButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+    marginLeft: 12,
   },
 });
 

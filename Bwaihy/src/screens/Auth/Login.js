@@ -7,13 +7,13 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import UserContext from "../../context/UserContext";
 import { login } from "../../api/auth";
 import { useMutation } from "@tanstack/react-query";
-import { Alert } from "react-native";
 import { jwtDecode } from "jwt-decode";
 import AccountContext from "../../context/AccountContext";
 
@@ -40,8 +40,6 @@ const Login = () => {
       const decodedToken = jwtDecode(data.token);
       console.log(decodedToken);
       setAccountType(decodedToken.accountType);
-      // console.log("Login successful:", data);
-      // console.log("Decoded account type:", decodedToken.accountType);
     },
     onError: () => {
       Alert.alert(
@@ -52,9 +50,26 @@ const Login = () => {
   });
 
   const handleLogin = () => {
-    // TODO: Implement login logic
     console.log("Login attempt with:", username, password);
     mutate();
+  };
+
+  const handleFaceIDSetupConfirm = () => {
+    setShowFaceIDSetup(false);
+    setShowFaceID(true);
+  };
+
+  const handleFaceIDSuccess = (data) => {
+    setShowFaceID(false);
+    // Here you would typically verify the facial ID with your backend
+    // and get the user's credentials
+    // For now, we'll just show a success message
+    Alert.alert("Success", "Face ID authentication successful!", [
+      {
+        text: "Continue",
+        onPress: handleLogin,
+      },
+    ]);
   };
 
   return (
@@ -67,12 +82,12 @@ const Login = () => {
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.welcomeText}>Welcome Back!</Text>
+        <Text style={styles.welcomeText}>Welcome Back</Text>
         <Text style={styles.subText}>Sign in to Continue</Text>
 
         <View style={styles.form}>
           <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={24} color="#8e8ba7" />
+            <Ionicons name="person-circle-outline" size={24} color="#8e8ba7" />
             <TextInput
               style={styles.input}
               placeholder="User Name"
@@ -127,37 +142,44 @@ const styles = StyleSheet.create({
     backgroundColor: "#141E30",
   },
   header: {
-    alignItems: "center",
-    paddingTop: 70,
-    paddingBottom: 20,
+    paddingTop: 60,
+    paddingBottom: 16,
     backgroundColor: "#141E30",
     borderBottomWidth: 1,
     borderBottomColor: "rgba(167, 139, 250, 0.2)",
+    alignItems: "center",
+    shadowColor: "#A78BFA",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   headerTitle: {
-    fontSize: 25,
-    fontWeight: "bold",
+    fontSize: 24,
+    fontWeight: "800",
     color: "#E8F0FE",
-    textAlign: "center",
+    letterSpacing: 0.5,
   },
   content: {
     flex: 1,
-    padding: 20,
-    justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingTop: 40,
+    paddingBottom: 20,
   },
   welcomeText: {
-    fontSize: 32,
-    textAlign: "center",
+    fontSize: 28,
     fontWeight: "800",
     color: "#E8F0FE",
+    textAlign: "center",
     marginBottom: 8,
-    marginTop: -80,
-    letterSpacing: 0.5,
   },
   subText: {
     fontSize: 16,
     color: "#A78BFA",
-    marginBottom: 40,
+    marginBottom: 48,
     textAlign: "center",
     fontWeight: "500",
   },
@@ -167,30 +189,28 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(167, 139, 250, 0.05)",
+    backgroundColor: "rgba(142, 139, 167, 0.1)",
     borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: "rgba(167, 139, 250, 0.2)",
+    paddingHorizontal: 16,
+    marginBottom: 20,
+    height: 65,
   },
   input: {
     flex: 1,
     color: "#E8F0FE",
+    paddingVertical: 16,
     marginLeft: 12,
     fontSize: 16,
   },
   eyeIcon: {
-    padding: 4,
+    padding: 8,
   },
   loginButton: {
-    backgroundColor: "#FF4F8E",
+    backgroundColor: "#A78BFA",
+    padding: 20,
     borderRadius: 16,
-    padding: 18,
-    alignItems: "center",
-    marginTop: 24,
-    shadowColor: "#FF4F8E",
+    marginTop: 40,
+    shadowColor: "#A78BFA",
     shadowOffset: {
       width: 0,
       height: 8,
@@ -203,12 +223,14 @@ const styles = StyleSheet.create({
     color: "#E8F0FE",
     fontSize: 18,
     fontWeight: "700",
+    textAlign: "center",
   },
   registerContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 24,
+    paddingBottom: 20,
   },
   registerText: {
     color: "#A78BFA",
@@ -218,6 +240,23 @@ const styles = StyleSheet.create({
   registerHighlight: {
     color: "#E8F0FE",
     fontWeight: "700",
+  },
+  faceIdButton: {
+    backgroundColor: "#0D9488",
+    borderRadius: 16,
+    padding: 18,
+    alignItems: "center",
+    marginTop: 16,
+    flexDirection: "row",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(167, 139, 250, 0.2)",
+  },
+  faceIdButtonText: {
+    color: "#E8F0FE",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
   },
 });
 
