@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, TouchableOpacity, Modal, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { makeDeposit } from "../api/transactions";
 import { getToken } from "../api/storage";
 import { jwtDecode } from "jwt-decode";
@@ -9,9 +10,29 @@ import { getProfile } from "../api/auth";
 const AddMoneyButton = ({ onSuccess }) => {
   const [depositModalVisible, setDepositModalVisible] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
+  const [errors, setErrors] = useState({});
+
+  const validateForm = useCallback(() => {
+    const newErrors = {};
+    if (!depositAmount.trim()) {
+      newErrors.amount = "Amount is required";
+    } else if (isNaN(depositAmount) || Number(depositAmount) <= 0) {
+      newErrors.amount = "Please enter a valid amount greater than 0";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [depositAmount]);
+
+  const isFormValid =
+    depositAmount.trim() && !isNaN(depositAmount) && Number(depositAmount) > 0;
 
   const handleMakeDeposit = async () => {
     try {
+      if (!validateForm()) {
+        return;
+      }
+
       const token = await getToken();
       const decodedToken = jwtDecode(token);
       const userId = decodedToken.userId;
@@ -20,6 +41,7 @@ const AddMoneyButton = ({ onSuccess }) => {
       onSuccess(profileData.user);
       setDepositModalVisible(false);
       setDepositAmount("");
+      setErrors({});
     } catch (error) {
       console.error(error);
     }
@@ -31,8 +53,12 @@ const AddMoneyButton = ({ onSuccess }) => {
         style={[styles.actionButton, styles.addButton]}
         onPress={() => setDepositModalVisible(true)}
       >
-        <Ionicons name="add" size={24} color="#fff" weight="bold" />
-        <Text style={styles.actionButtonText}>Add</Text>
+        <MaterialCommunityIcons
+          name="plus-circle-outline"
+          size={24}
+          color="#E8F0FE"
+        />
+        <Text style={styles.actionButtonText}>Add Money</Text>
       </TouchableOpacity>
 
       <Modal
@@ -44,7 +70,11 @@ const AddMoneyButton = ({ onSuccess }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalView}>
             <TouchableOpacity
-              onPress={() => setDepositModalVisible(false)}
+              onPress={() => {
+                setDepositModalVisible(false);
+                setDepositAmount("");
+                setErrors({});
+              }}
               style={styles.closeButton}
             >
               <Ionicons name="close-circle" size={28} color="#9991b1" />
@@ -66,12 +96,26 @@ const AddMoneyButton = ({ onSuccess }) => {
                   keyboardType="numeric"
                 />
               </View>
+              {errors.amount && (
+                <Text style={styles.errorText}>{errors.amount}</Text>
+              )}
 
               <TouchableOpacity
-                style={styles.modalButton}
+                style={[
+                  styles.modalButton,
+                  !isFormValid && styles.modalButtonDisabled,
+                ]}
                 onPress={handleMakeDeposit}
+                disabled={!isFormValid}
               >
-                <Text style={styles.modalButtonText}>Confirm</Text>
+                <Text
+                  style={[
+                    styles.modalButtonText,
+                    !isFormValid && styles.modalButtonTextDisabled,
+                  ]}
+                >
+                  Confirm
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -92,7 +136,7 @@ const styles = {
     gap: 8,
   },
   addButton: {
-    backgroundColor: "#FF4F6D",
+    backgroundColor: "#FF4F8E",
     fontWeight: "700",
   },
   actionButtonText: {
@@ -102,26 +146,26 @@ const styles = {
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(31, 29, 53, 0.95)",
+    backgroundColor: "rgba(20, 30, 48, 0.95)",
     justifyContent: "center",
     alignItems: "center",
   },
   modalView: {
-    backgroundColor: "#2a2844",
+    backgroundColor: "#1A2942",
     borderRadius: 24,
     padding: 32,
     width: "90%",
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: "#FF4F8E",
     shadowOffset: {
       width: 0,
       height: 8,
     },
-    shadowOpacity: 0.44,
-    shadowRadius: 10.32,
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
     elevation: 16,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: "rgba(255, 79, 142, 0.2)",
     position: "relative",
   },
   modalHeader: {
@@ -132,11 +176,9 @@ const styles = {
   modalTitle: {
     fontSize: 28,
     fontWeight: "800",
-    color: "#fff",
+    color: "#E8F0FE",
     textAlign: "center",
-    textShadowColor: "rgba(255, 79, 109, 0.3)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    letterSpacing: 0.5,
   },
   modalContent: {
     width: "100%",
@@ -146,26 +188,26 @@ const styles = {
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(31, 29, 53, 0.95)",
+    backgroundColor: "rgba(255, 79, 142, 0.05)",
     borderRadius: 16,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 8,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: "rgba(255, 79, 142, 0.2)",
   },
   modalInput: {
     flex: 1,
-    color: "#fff",
+    color: "#E8F0FE",
     fontSize: 16,
     marginLeft: 10,
   },
   modalButton: {
     width: "100%",
-    backgroundColor: "#FF4F6D",
+    backgroundColor: "#FF4F8E",
     padding: 18,
     borderRadius: 16,
     marginBottom: 16,
-    shadowColor: "#FF4F6D",
+    shadowColor: "#FF4F8E",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -174,14 +216,18 @@ const styles = {
     shadowRadius: 5.46,
     elevation: 9,
   },
+  modalButtonDisabled: {
+    backgroundColor: "rgba(255, 79, 142, 0.3)",
+    shadowOpacity: 0,
+  },
   modalButtonText: {
     color: "#fff",
     fontSize: 18,
     fontWeight: "700",
     textAlign: "center",
-    textShadowColor: "rgba(0, 0, 0, 0.25)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+  },
+  modalButtonTextDisabled: {
+    color: "rgba(255, 255, 255, 0.5)",
   },
   closeButton: {
     position: "absolute",
@@ -189,6 +235,13 @@ const styles = {
     top: 16,
     padding: 8,
     zIndex: 1,
+  },
+  errorText: {
+    color: "#FF4F8E",
+    fontSize: 12,
+    marginBottom: 12,
+    alignSelf: "flex-start",
+    marginLeft: 4,
   },
 };
 

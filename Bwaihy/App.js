@@ -10,7 +10,7 @@ import UserContext from "./src/context/UserContext";
 import AccountContext from "./src/context/AccountContext";
 import BusinessDashboard from "./src/screens/Business/businessDashboard";
 import jwtDecode from "jwt-decode";
-import FamilyTieDetails from "./src/screens/Home/FamilyTieDetails";
+
 
 export default function App() {
   const queryClient = new QueryClient();
@@ -30,8 +30,8 @@ export default function App() {
   };
 
   useEffect(() => {
-    checkToken();
-    // deleteToken();
+    // checkToken(); 
+    deleteToken();
   }, []);
 
   const renderDashboard = () => {
@@ -58,9 +58,6 @@ export default function App() {
       </QueryClientProvider>
     </NavigationContainer>
 
-    // <View style={styles.container}>
-    //   <FamilyTieDetails />
-    // </View>
   );
 }
 
