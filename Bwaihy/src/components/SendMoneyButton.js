@@ -6,13 +6,15 @@ import {
   Modal,
   TextInput,
   ScrollView,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import UserContext from "../context/UserContext";
-import { getFamily } from "../api/family";
+import { getFamily, setLimit } from "../api/family";
 import { getToken } from "../api/storage";
 import { jwtDecode } from "jwt-decode";
+import { useMutation } from "@tanstack/react-query";
 
 const SendMoneyButton = () => {
   const [sendModalVisible, setSendModalVisible] = useState(false);
@@ -21,7 +23,10 @@ const SendMoneyButton = () => {
   const [familyMembers, setFamilyMembers] = useState([]);
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [errors, setErrors] = useState({});
+  const [profile, setProfile] = useState("");
   const { user } = useContext(UserContext);
+
+  console.log(selectedMember);
 
   useEffect(() => {
     if (sendModalVisible) {
@@ -36,12 +41,27 @@ const SendMoneyButton = () => {
         const decodedToken = jwtDecode(token);
         const userId = decodedToken.userId;
         const response = await getFamily(userId);
+        setProfile(userId);
         setFamilyMembers(response.familyMembers);
       }
     } catch (error) {
       console.error("Error fetching family members:", error);
     }
   };
+
+  const sendMoney = useMutation({
+    mutationFn: (amount) => setLimit(profile, amount, selectedMember.id),
+    onSuccess: (data) => {
+      console.log("Limit set successfully:", data);
+      setSendModalVisible(false);
+      setSendAmount("");
+      setSelectedMember(null);
+      // Handle success, e.g., update state or show a success message
+    },
+    onError: (error) => {
+      Alert.alert("Error", error.message);
+    },
+  });
 
   const validateForm = useCallback(() => {
     const newErrors = {};
@@ -65,14 +85,12 @@ const SendMoneyButton = () => {
     Number(sendAmount) > 0;
 
   const handleSendMoney = async () => {
+    console.log(profile, sendAmount, selectedMember.id);
     try {
       if (!validateForm()) {
         return;
       }
-      // Add your send money logic here
-      setSendModalVisible(false);
-      setSendAmount("");
-      setSelectedMember(null);
+      sendMoney.mutate(Number(sendAmount));
       setErrors({});
     } catch (error) {
       console.error(error);

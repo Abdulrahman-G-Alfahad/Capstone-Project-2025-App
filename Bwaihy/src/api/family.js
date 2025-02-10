@@ -34,13 +34,14 @@ const deleteFamily = async (userId, familyId) => {
 };
 
 const setLimit = async (userId, limit, memberId) => {
-  //   console.log(userId, limit, memberId);
+  console.log("here");
+  console.log(userId, limit, memberId);
   try {
     const res = await instance.put(
       `/personal/setLimit/${userId}/${memberId}/${limit}`,
       limit
     );
-    // console.log(res.data);
+    console.log(res.data);
     return res.data;
   } catch (error) {
     throw error;

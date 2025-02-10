@@ -83,11 +83,12 @@ const FamilyTieDetails = ({ route, navigation }) => {
     setErrors({});
   };
 
-  // console.log(memberProfile);
+  console.log(memberProfile.transactions[0].receiver);
   // Transform businesses data into transactions format
   const transactions = memberProfile.transactions.map((transaction) => ({
     id: transaction.id,
-    business: transaction.businessName,
+    business: transaction.receiver.name,
+    location: transaction.receiver.address,
     date: moment(transaction.date).format("YYYY-MM-DD"),
     amount: transaction.amount,
     icon: transaction.icon,
@@ -137,14 +138,14 @@ const FamilyTieDetails = ({ route, navigation }) => {
           <View style={styles.balanceContainer}>
             <View style={styles.balanceItem}>
               <Text style={styles.balanceLabel}>Amount Sent</Text>
-              <Text style={styles.balanceValue}>KD {totalSent.toFixed(2)}</Text>
+              <Text style={styles.balanceValue}>
+                KD {memberProfile.walletBalance}
+              </Text>
             </View>
             <View style={styles.balanceSeparator} />
             <View style={styles.balanceItem}>
               <Text style={styles.balanceLabel}>Remaining Balance</Text>
-              <Text style={styles.balanceValue}>
-                KD {remainingBalance.toFixed(2)}
-              </Text>
+              <Text style={styles.balanceValue}>KD {remainingBalance}</Text>
             </View>
           </View>
 
@@ -179,24 +180,32 @@ const FamilyTieDetails = ({ route, navigation }) => {
               showsHorizontalScrollIndicator={false}
             >
               {transactions.length > 0 ? (
-                transactions.map((transaction) => (
-                  <View key={transaction.id} style={styles.transactionItem}>
-                    <View style={styles.transactionLeft}>
-                      <BusinessIcon businessName={transaction.business} />
-                      <View style={styles.transactionInfo}>
-                        <Text style={styles.businessName}>
-                          {transaction.business}
-                        </Text>
-                        <Text style={styles.transactionDate}>
-                          {moment(transaction.date).format("MMMM D, YYYY")}
+                transactions.map(
+                  (transaction) => (
+                    console.log(transaction.receiver),
+                    (
+                      <View key={transaction.id} style={styles.transactionItem}>
+                        <View style={styles.transactionLeft}>
+                          <BusinessIcon businessName={transaction.receiver} />
+                          <View style={styles.transactionInfo}>
+                            <Text style={styles.businessName}>
+                              {transaction.business}
+                            </Text>
+                            <Text style={styles.businessType}>
+                              {transaction.location}
+                            </Text>
+                            <Text style={styles.transactionDate}>
+                              {moment(transaction.date).format("MMMM D, YYYY")}
+                            </Text>
+                          </View>
+                        </View>
+                        <Text style={styles.transactionAmount}>
+                          {transaction.amount.toFixed(2)} KD
                         </Text>
                       </View>
-                    </View>
-                    <Text style={styles.transactionAmount}>
-                      {transaction.amount.toFixed(2)} KD
-                    </Text>
-                  </View>
-                ))
+                    )
+                  )
+                )
               ) : (
                 <View style={styles.emptyTransactionsContainer}>
                   <Ionicons name="receipt-outline" size={48} color="#A78BFA" />
@@ -672,6 +681,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     lineHeight: 20,
+  },
+  businessType: {
+    color: "#A78BFA",
+    fontSize: 14,
+    marginBottom: 2,
+    fontWeight: "500",
   },
 });
 
