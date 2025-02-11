@@ -15,7 +15,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { register } from "../../api/auth";
 import { useMutation } from "@tanstack/react-query";
 import UserContext from "../../context/UserContext";
+import AccountContext from "../../context/AccountContext";
 import FaceID from "../../components/FaceID";
+import { jwtDecode } from "jwt-decode";
 
 const Register = () => {
   const navigation = useNavigation();
@@ -29,7 +31,8 @@ const Register = () => {
   const [bankAccount, setBankAccount] = useState("");
   const [address, setAddress] = useState("");
   const [username, setUsername] = useState("");
-  const { user, setUser } = useContext(UserContext);
+  const { setUser } = useContext(UserContext);
+  const { setAccountType, setUserId } = useContext(AccountContext);
   const [showFaceID, setShowFaceID] = useState(false);
   const [faceId, setFaceId] = useState("");
 
@@ -50,6 +53,12 @@ const Register = () => {
     mutationFn: () => register(userInfo),
     onSuccess: (data) => {
       console.log(data);
+      if (data.token) {
+        const decodedToken = jwtDecode(data.token);
+        setUser(true);
+        setAccountType(decodedToken.accountType);
+        setUserId(decodedToken.userId);
+      }
       navigation.navigate("Login");
       console.log("Registration successful:", data);
     },
