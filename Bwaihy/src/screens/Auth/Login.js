@@ -23,7 +23,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const { setUser } = useContext(UserContext);
-  const { setAccountType } = useContext(AccountContext);
+  const { setAccountType, setUserId } = useContext(AccountContext);
 
   const userInfo = {
     username: username,
@@ -40,6 +40,7 @@ const Login = () => {
       const decodedToken = jwtDecode(data.token);
       console.log(decodedToken);
       setAccountType(decodedToken.accountType);
+      setUserId(decodedToken.userId);
     },
     onError: () => {
       Alert.alert(
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#A78BFA",
     padding: 20,
     borderRadius: 16,
-    marginTop: 40,
+    marginTop: 150,
     shadowColor: "#A78BFA",
     shadowOffset: {
       width: 0,

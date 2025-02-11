@@ -366,8 +366,8 @@ const Dashboard = () => {
               >
                 <Ionicons name="qr-code-outline" size={28} color="#fff" />
               </View>
-              <Text style={styles.quickActionText}>Scan QR</Text>
-              <Text style={styles.quickActionSubText}>Pay with QR code</Text>
+              <Text style={styles.quickActionText}>Generate QR</Text>
+              <Text style={styles.quickActionSubText}>Pay via QR code</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.quickActionButton}

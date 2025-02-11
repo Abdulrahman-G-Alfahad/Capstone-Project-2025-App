@@ -11,11 +11,11 @@ import AccountContext from "./src/context/AccountContext";
 import BusinessDashboard from "./src/screens/Business/businessDashboard";
 import jwtDecode from "jwt-decode";
 
-
 export default function App() {
   const queryClient = new QueryClient();
   const [user, setUser] = useState(false);
   const [accountType, setAccountType] = useState("");
+  const [userId, setUserId] = useState("");
 
   const checkToken = async () => {
     const token = await getToken();
@@ -23,14 +23,14 @@ export default function App() {
       setUser(true);
       const decodedToken = jwtDecode(token);
       setAccountType(decodedToken.accountType);
-      // console.log("Decoded account type:", decodedToken.accountType);
+      setUserId(decodedToken.userId);
     } else {
       console.log("No token found");
     }
   };
 
   useEffect(() => {
-    checkToken(); 
+    checkToken();
     // deleteToken();
   }, []);
 
@@ -50,14 +50,15 @@ export default function App() {
     <NavigationContainer>
       <QueryClientProvider client={queryClient}>
         <UserContext.Provider value={{ user, setUser }}>
-          <AccountContext.Provider value={{ accountType, setAccountType }}>
+          <AccountContext.Provider
+            value={{ accountType, setAccountType, userId, setUserId }}
+          >
             <StatusBar style="light" backgroundColor="#ffff" />
             {user ? renderDashboard() : <AuthNav />}
           </AccountContext.Provider>
         </UserContext.Provider>
       </QueryClientProvider>
     </NavigationContainer>
-
   );
 }
 
