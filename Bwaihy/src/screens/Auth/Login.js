@@ -91,7 +91,7 @@ const Login = () => {
             <Ionicons name="person-circle-outline" size={24} color="#8e8ba7" />
             <TextInput
               style={styles.input}
-              placeholder="User Name"
+              placeholder="Username"
               placeholderTextColor="#8e8ba7"
               value={username}
               onChangeText={setUsername}
