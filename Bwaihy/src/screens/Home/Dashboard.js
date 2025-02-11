@@ -75,6 +75,8 @@ const Dashboard = () => {
   const [isAddMoneyModalVisible, setIsAddMoneyModalVisible] = useState(false);
   const [isSendMoneyModalVisible, setIsSendMoneyModalVisible] = useState(false);
   const [isBalanceHidden, setIsBalanceHidden] = useState(false);
+  const [isFamilyTiesCollapsed, setIsFamilyTiesCollapsed] = useState(false);
+  const [isTransactionsCollapsed, setIsTransactionsCollapsed] = useState(false);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -284,41 +286,76 @@ const Dashboard = () => {
           {/* Family Ties Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Family Ties</Text>
+              <View style={styles.sectionTitleContainer}>
+                <Text style={styles.sectionTitle}>Family Ties</Text>
+                <TouchableOpacity
+                  onPress={() =>
+                    setIsFamilyTiesCollapsed(!isFamilyTiesCollapsed)
+                  }
+                  style={styles.collapseButton}
+                >
+                  <Ionicons
+                    name={isFamilyTiesCollapsed ? "chevron-down" : "chevron-up"}
+                    size={20}
+                    color="#A78BFA"
+                  />
+                </TouchableOpacity>
+              </View>
               <TouchableOpacity
                 onPress={() => navigation.navigate("FamilyTies")}
               >
                 <Text style={styles.seeAllText}>See All</Text>
               </TouchableOpacity>
             </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.familyTiesScrollView}
-            >
-              <View style={styles.familyTiesContainer}>
-                <TouchableOpacity
-                  style={styles.addFamilyButton}
-                  onPress={() => setModalVisible(true)}
-                >
-                  <View style={[styles.avatar, styles.addAvatar]}>
-                    <Ionicons name="add" size={24} color="#fff" />
-                  </View>
-                  <Text style={styles.addFamilyTiesButtonText}>Add New</Text>
-                </TouchableOpacity>
-                {familyMembers.length > 0 ? (
-                  familyMembers.map((member, index) =>
-                    renderFamilyMember(member, index)
-                  )
-                ) : (
-                  <View style={styles.emptyMessageWrapper}>
-                    <Text style={styles.emptyMessage}>
-                      Add your family members to get started
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </ScrollView>
+            {!isFamilyTiesCollapsed && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.familyTiesScrollView}
+              >
+                <View style={styles.familyTiesContainer}>
+                  <TouchableOpacity
+                    style={styles.addFamilyButton}
+                    onPress={() => setModalVisible(true)}
+                  >
+                    <View
+                      style={[
+                        styles.avatar,
+                        styles.addAvatar,
+                        { marginBottom: 0 },
+                      ]}
+                    >
+                      <Ionicons name="add" size={24} color="#fff" />
+                    </View>
+                    <Text style={styles.addFamilyTiesButtonText}>Add New</Text>
+                  </TouchableOpacity>
+                  {familyMembers.length > 0 ? (
+                    familyMembers.map((member, index) =>
+                      renderFamilyMember(member, index)
+                    )
+                  ) : (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        height: 65,
+                        marginBottom: 8,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "#9991b1",
+                          fontSize: 14,
+                          marginLeft: 8,
+                        }}
+                      >
+                        Add your family members to get started
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </ScrollView>
+            )}
           </View>
 
           {/* Add Family Ties Modal */}
@@ -331,28 +368,50 @@ const Dashboard = () => {
           {/* Transactions Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Recent Transactions</Text>
+              <View style={styles.sectionTitleContainer}>
+                <Text style={styles.sectionTitle}>Recent Transactions</Text>
+                <TouchableOpacity
+                  onPress={() =>
+                    setIsTransactionsCollapsed(!isTransactionsCollapsed)
+                  }
+                  style={styles.collapseButton}
+                >
+                  <Ionicons
+                    name={
+                      isTransactionsCollapsed ? "chevron-down" : "chevron-up"
+                    }
+                    size={20}
+                    color="#A78BFA"
+                  />
+                </TouchableOpacity>
+              </View>
               <TouchableOpacity
                 onPress={() => navigation.navigate("Transactions")}
               >
                 <Text style={styles.seeAllText}>View All</Text>
               </TouchableOpacity>
             </View>
-            <View style={styles.transactionsContainer}>
-              {profile && profile.transactionHistory.length > 0 ? (
-                limitedTransactions.map(({ date, tx }) =>
-                  renderTransactionSection(date, [tx])
-                )
-              ) : (
-                <View style={styles.emptyStateContainer}>
-                  <Ionicons name="receipt-outline" size={48} color="#9991b1" />
-                  <Text style={styles.emptyMessage}>No transactions yet</Text>
-                  <Text style={styles.emptySubMessage}>
-                    Your transactions will appear here
-                  </Text>
-                </View>
-              )}
-            </View>
+            {!isTransactionsCollapsed && (
+              <View style={styles.transactionsContainer}>
+                {profile && profile.transactionHistory.length > 0 ? (
+                  limitedTransactions.map(({ date, tx }) =>
+                    renderTransactionSection(date, [tx])
+                  )
+                ) : (
+                  <View style={styles.emptyStateContainer}>
+                    <Ionicons
+                      name="receipt-outline"
+                      size={48}
+                      color="#9991b1"
+                    />
+                    <Text style={styles.emptyMessage}>No transactions yet</Text>
+                    <Text style={styles.emptySubMessage}>
+                      Your transactions will appear here
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
           </View>
 
           {/* Quick Actions */}
@@ -366,8 +425,8 @@ const Dashboard = () => {
               >
                 <Ionicons name="qr-code-outline" size={28} color="#fff" />
               </View>
-              <Text style={styles.quickActionText}>Scan QR</Text>
-              <Text style={styles.quickActionSubText}>Pay with QR code</Text>
+              <Text style={styles.quickActionText}>Generate QR</Text>
+              <Text style={styles.quickActionSubText}>Pay via QR code</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.quickActionButton}
@@ -514,6 +573,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
+  },
+  sectionTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   sectionTitle: {
     fontSize: 22,
@@ -803,10 +867,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     textAlign: "center",
+    marginTop: 8,
   },
   emptyMessageWrapper: {
     alignItems: "center",
     padding: 24,
+  },
+  collapseButton: {
+    padding: 4,
   },
 });
 

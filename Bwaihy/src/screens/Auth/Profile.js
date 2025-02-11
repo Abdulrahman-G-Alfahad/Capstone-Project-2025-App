@@ -9,6 +9,7 @@ import {
   Alert,
   Platform,
   SafeAreaView,
+  KeyboardAvoidingView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,8 +30,6 @@ const Profile = () => {
   const [photo, setPhoto] = useState("");
   const [civilId, setCivilId] = useState("");
   const [bankAccount, setBankAccount] = useState("");
-  const [pinCode, setPinCode] = useState("");
-  const [showPin, setShowPin] = useState(false);
 
   const { user, setUser } = useContext(UserContext);
 
@@ -64,7 +63,6 @@ const Profile = () => {
       setPhoto(profile.user.photo);
       setCivilId(profile.user.civilId || "");
       setBankAccount(profile.user.bankAccount || "");
-      setPinCode(profile.user.pinCode || "");
     }
   }, [profile]);
 
@@ -89,7 +87,6 @@ const Profile = () => {
       setPhoto(profile.photo);
       setCivilId(profile.civilId || "");
       setBankAccount(profile.bankAccount || "");
-      setPinCode(profile.pinCode || "");
     }
     setIsEditing(false);
   };
@@ -283,39 +280,6 @@ const Profile = () => {
                 </Text>
               )}
             </View>
-
-            <Text style={styles.sectionLabel}>PIN Code</Text>
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={24} color="#A78BFA" />
-              {isEditing ? (
-                <View style={styles.pinInputContainer}>
-                  <TextInput
-                    style={[styles.inputText, styles.input, styles.pinInput]}
-                    value={pinCode}
-                    onChangeText={(text) => setPinCode(text.slice(0, 4))}
-                    keyboardType="numeric"
-                    maxLength={4}
-                    secureTextEntry={!showPin}
-                    placeholder="Enter 4-digit PIN"
-                    placeholderTextColor="#8e8ba7"
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPin(!showPin)}
-                    style={styles.showPinButton}
-                  >
-                    <Ionicons
-                      name={showPin ? "eye-off-outline" : "eye-outline"}
-                      size={24}
-                      color="#A78BFA"
-                    />
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <Text style={styles.inputText}>
-                  {pinCode ? "••••" : "Not provided"}
-                </Text>
-              )}
-            </View>
           </View>
 
           {/* Logout Button */}
@@ -365,10 +329,6 @@ const styles = StyleSheet.create({
   editButton: {
     width: 40,
     height: 40,
-    backgroundColor: "rgba(167, 139, 250, 0.1)",
-    borderRadius: 50,
-    borderWidth: 1,
-    borderColor: "rgba(167, 139, 250, 0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -408,7 +368,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#E8F0FE",
     textAlign: "center",
-    marginBottom: 30,
+    flex: 1,
   },
   detailsContainer: {
     width: "100%",
@@ -461,9 +421,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 30,
+    width: "100%",
   },
   nameEditIcon: {
     marginLeft: 10,
+    position: "absolute",
+    right: 20,
   },
   editButtonsContainer: {
     flexDirection: "row",
@@ -472,12 +435,8 @@ const styles = StyleSheet.create({
   },
   editActionButton: {
     padding: 8,
-    backgroundColor: "rgba(167, 139, 250, 0.1)",
-    borderRadius: 50,
     width: 40,
     height: 40,
-    borderWidth: 1,
-    borderColor: "rgba(167, 139, 250, 0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -492,19 +451,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: "center",
     marginTop: 20,
-  },
-  pinInputContainer: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: 12,
-  },
-  pinInput: {
-    marginLeft: 0,
-    flex: 1,
-  },
-  showPinButton: {
-    padding: 8,
   },
 });
 

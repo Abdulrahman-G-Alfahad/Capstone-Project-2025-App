@@ -154,7 +154,39 @@ const Transactions = () => {
   }
 
   const groupedTransactions = groupTransactionsByDate(
-    profile.transactionHistory.reverse()
+    profile.transactionHistory
+      .filter((transaction) => {
+        // Apply date range filter
+        const transactionDate = moment(transaction.dateTime).startOf("day");
+        const startDateMoment = moment(startDate).startOf("day");
+        const endDateMoment = moment(endDate).startOf("day");
+        const isWithinDateRange = transactionDate.isBetween(
+          startDateMoment,
+          endDateMoment,
+          "day",
+          "[]"
+        );
+
+        // Apply search filter
+        const searchLower = searchQuery.toLowerCase();
+        const receiverName = (
+          transaction.receiver.name ||
+          transaction.receiver.fullName ||
+          ""
+        ).toLowerCase();
+        const receiverAddress = (
+          transaction.receiver.address || ""
+        ).toLowerCase();
+        const amount = transaction.amount.toString();
+        const matchesSearch =
+          !searchQuery ||
+          receiverName.includes(searchLower) ||
+          receiverAddress.includes(searchLower) ||
+          amount.includes(searchLower);
+
+        return isWithinDateRange && matchesSearch;
+      })
+      .reverse()
   );
   console.log(groupedTransactions);
 
