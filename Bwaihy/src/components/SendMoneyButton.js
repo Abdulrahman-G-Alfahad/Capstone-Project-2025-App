@@ -128,7 +128,7 @@ const SendMoneyButton = () => {
           size={24}
           color="#E8F0FE"
         />
-        <Text style={styles.actionButtonText}>Send Money</Text>
+        <Text style={styles.actionButtonText}>Set Deposit</Text>
       </TouchableOpacity>
 
       <Modal
@@ -144,11 +144,12 @@ const SendMoneyButton = () => {
             </TouchableOpacity>
 
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Send Money</Text>
+              <Text style={styles.modalTitle}>Set Deposit</Text>
             </View>
 
             <View style={styles.modalContent}>
-              {/* Family Member Selection */}
+
+              {/* Family Ties Selection */}
               <View style={styles.dropdownContainer}>
                 <TouchableOpacity
                   style={getInputContainerStyle()}
@@ -163,7 +164,7 @@ const SendMoneyButton = () => {
                   >
                     {selectedMember
                       ? selectedMember.fullName
-                      : "Select Family Member"}
+                      : "Select Family Tie"}
                   </Text>
                   <Ionicons
                     name={dropdownVisible ? "chevron-up" : "chevron-down"}
@@ -233,6 +234,8 @@ const SendMoneyButton = () => {
                 <Text style={styles.errorText}>{errors.amount}</Text>
               )}
 
+              {/* Deposit Amount Button*/}
+
               <TouchableOpacity
                 style={[
                   styles.modalButton,
@@ -250,6 +253,7 @@ const SendMoneyButton = () => {
                   Send
                 </Text>
               </TouchableOpacity>
+
             </View>
           </View>
         </View>
@@ -339,6 +343,7 @@ const styles = {
     width: "100%",
     backgroundColor: "#0D9488",
     padding: 18,
+    marginTop: 15,
     borderRadius: 16,
     marginBottom: 16,
     shadowColor: "#0D9488",
