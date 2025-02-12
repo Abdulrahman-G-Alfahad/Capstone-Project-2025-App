@@ -83,7 +83,7 @@ const FamilyTieDetails = ({ route, navigation }) => {
     setErrors({});
   };
 
-  console.log(memberProfile.transactions[0].receiver);
+  // console.log(memberProfile.transactions[0].receiver);
   // Transform businesses data into transactions format
   const transactions = memberProfile.transactions.map((transaction) => ({
     id: transaction.id,
@@ -137,13 +137,6 @@ const FamilyTieDetails = ({ route, navigation }) => {
           {/* Balance Information */}
           <View style={styles.balanceContainer}>
             <View style={styles.balanceItem}>
-              <Text style={styles.balanceLabel}>Amount Sent</Text>
-              <Text style={styles.balanceValue}>
-                KD {memberProfile.walletBalance}
-              </Text>
-            </View>
-            <View style={styles.balanceSeparator} />
-            <View style={styles.balanceItem}>
               <Text style={styles.balanceLabel}>Remaining Balance</Text>
               <Text style={styles.balanceValue}>KD {remainingBalance}</Text>
             </View>
@@ -155,7 +148,7 @@ const FamilyTieDetails = ({ route, navigation }) => {
             onPress={handleSendMoney}
           >
             <Ionicons name="wallet-outline" size={24} color="#fff" />
-            <Text style={styles.sendMoneyText}>Send Money</Text>
+            <Text style={styles.sendMoneyText}>Set Deposit</Text>
           </TouchableOpacity>
         </View>
 
@@ -246,19 +239,23 @@ const FamilyTieDetails = ({ route, navigation }) => {
               </TouchableOpacity>
 
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Send Money</Text>
+                <Text style={styles.modalTitle}>Set Deposit</Text>
+                <Text style={styles.modalSubtitle}>Set New Wallet Balance</Text>
               </View>
 
               <View style={styles.modalContent}>
                 <View style={styles.inputContainer}>
-                  <Ionicons name="wallet-outline" size={24} color="#8e8ba7" />
+                  <View style={styles.currencyContainer}>
+                    <Text style={styles.currencyText}>KD</Text>
+                  </View>
                   <TextInput
                     style={styles.modalInput}
-                    placeholder="Amount"
+                    placeholder="0.000"
                     placeholderTextColor="#8e8ba7"
                     value={amount}
                     onChangeText={setAmount}
                     keyboardType="numeric"
+                    autoFocus={true}
                   />
                 </View>
                 {errors.amount && (
@@ -267,19 +264,19 @@ const FamilyTieDetails = ({ route, navigation }) => {
 
                 <TouchableOpacity
                   style={[
-                    styles.modalButton,
-                    !isFormValid && styles.modalButtonDisabled,
+                    styles.sendButton,
+                    !isFormValid && styles.sendButtonDisabled,
                   ]}
                   onPress={confirmSendMoney}
                   disabled={!isFormValid}
                 >
                   <Text
                     style={[
-                      styles.modalButtonText,
-                      !isFormValid && styles.modalButtonTextDisabled,
+                      styles.sendButtonText,
+                      !isFormValid && styles.sendButtonTextDisabled,
                     ]}
                   >
-                    Send
+                    Send Money
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -526,8 +523,9 @@ const styles = StyleSheet.create({
   modalView: {
     backgroundColor: "#1A2942",
     borderRadius: 24,
-    padding: 32,
+    padding: 24,
     width: "90%",
+    maxWidth: 400,
     alignItems: "center",
     shadowColor: "#A78BFA",
     shadowOffset: {
@@ -544,14 +542,20 @@ const styles = StyleSheet.create({
   modalHeader: {
     width: "100%",
     marginBottom: 24,
-    paddingTop: 8,
+    alignItems: "center",
   },
   modalTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "800",
     color: "#E8F0FE",
     textAlign: "center",
     letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: "#8e8ba7",
+    textAlign: "center",
   },
   modalContent: {
     width: "100%",
@@ -563,43 +567,57 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(167, 139, 250, 0.05)",
     borderRadius: 16,
-    padding: 16,
-    marginBottom: 8,
     borderWidth: 1,
     borderColor: "rgba(167, 139, 250, 0.2)",
+    marginBottom: 24,
+    overflow: "hidden",
+  },
+  currencyContainer: {
+    // backgroundColor: "rgba(167, 139, 250, 0.1)",
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderRightWidth: 1,
+    borderRightColor: "rgba(167, 139, 250, 0.2)",
+  },
+  currencyText: {
+    color: "#A78BFA",
+    fontSize: 16,
+    fontWeight: "600",
   },
   modalInput: {
     flex: 1,
     color: "#E8F0FE",
-    fontSize: 16,
-    marginLeft: 10,
+    fontSize: 20,
+    fontWeight: "600",
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
-  modalButton: {
-    flex: 1,
-    padding: 18,
+  sendButton: {
+    width: "100%",
+    backgroundColor: "#A78BFA",
+    paddingVertical: 16,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#A78BFA",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
-  modalButtonDisabled: {
+  sendButtonDisabled: {
     backgroundColor: "rgba(167, 139, 250, 0.3)",
     shadowOpacity: 0,
   },
-  modalButtonText: {
+  sendButtonText: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
-    textAlign: "center",
   },
-  modalButtonTextDisabled: {
+  sendButtonTextDisabled: {
     color: "rgba(255, 255, 255, 0.5)",
-  },
-  closeButton: {
-    position: "absolute",
-    right: 16,
-    top: 16,
-    padding: 8,
-    zIndex: 1,
   },
   errorText: {
     color: "#FF4F6D",
@@ -628,6 +646,13 @@ const styles = StyleSheet.create({
     marginTop: 24,
     width: "100%",
   },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   cancelButton: {
     backgroundColor: "rgba(167, 139, 250, 0.05)",
     borderWidth: 1,
@@ -638,19 +663,19 @@ const styles = StyleSheet.create({
     shadowColor: "#A78BFA",
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 24,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
     elevation: 8,
   },
   cancelButtonText: {
-    color: "#E8F0FE",
+    color: "#A78BFA",
     fontSize: 16,
     fontWeight: "700",
   },
   confirmButtonText: {
-    color: "#E8F0FE",
+    color: "#fff",
     fontSize: 16,
     fontWeight: "700",
   },
@@ -687,6 +712,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 2,
     fontWeight: "500",
+  },
+  closeButton: {
+    position: "absolute",
+    right: 16,
+    top: 16,
+    padding: 8,
+    zIndex: 1,
   },
 });
 

@@ -106,6 +106,7 @@ const AddFamilyTies = ({
           </View>
 
           <View style={styles.form}>
+            {/* Full Name Input */}
             <View style={styles.inputContainer}>
               <Ionicons name="person-outline" size={24} color="#8e8ba7" />
               <TextInput
@@ -120,21 +121,7 @@ const AddFamilyTies = ({
               <Text style={styles.errorText}>{errors.fullName}</Text>
             )}
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="wallet-outline" size={24} color="#8e8ba7" />
-              <TextInput
-                style={styles.input}
-                placeholder="Wallet Balance"
-                placeholderTextColor="#8e8ba7"
-                value={walletBalance}
-                onChangeText={setWalletBalance}
-                keyboardType="numeric"
-              />
-            </View>
-            {errors.walletBalance && (
-              <Text style={styles.errorText}>{errors.walletBalance}</Text>
-            )}
-
+            {/* Face ID Button */}
             <TouchableOpacity
               style={[styles.faceIdButton]}
               onPress={handleFaceIDPress}
@@ -293,7 +280,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#A78BFA",
     padding: 18,
     borderRadius: 16,
-    marginTop: 8,
+    marginTop: 20,
     marginBottom: 16,
     shadowColor: "#A78BFA",
     shadowOffset: {
