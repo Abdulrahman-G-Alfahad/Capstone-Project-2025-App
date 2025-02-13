@@ -174,15 +174,13 @@ const Transactions = () => {
           transaction.receiver.fullName ||
           ""
         ).toLowerCase();
-        const receiverAddress = (
-          transaction.receiver.address || ""
-        ).toLowerCase();
         const amount = transaction.amount.toString();
+        const method = transaction.method.toLowerCase();
         const matchesSearch =
           !searchQuery ||
           receiverName.includes(searchLower) ||
-          receiverAddress.includes(searchLower) ||
-          amount.includes(searchLower);
+          amount.includes(searchLower) ||
+          method.includes(searchLower);
 
         return isWithinDateRange && matchesSearch;
       })
@@ -284,16 +282,27 @@ const Transactions = () => {
                       }
                     />
                     <View style={styles.transactionInfo}>
-                      <Text style={styles.businessName}>
-                        {transaction.receiver.name ||
-                          transaction.receiver.fullName}
-                      </Text>
-                      <Text style={styles.businessType}>
-                        {transaction.receiver.address}
-                      </Text>
-                      <Text style={styles.transactionTime}>
-                        {moment(transaction.dateTime).format("h:mm A")}
-                      </Text>
+                      {transaction.method === "DEPOSIT" ? (
+                        <>
+                          <Text style={styles.businessName}>Deposit</Text>
+                          <Text style={styles.transactionTime}>
+                            {moment(transaction.dateTime).format("YYYY-MM-DD")}
+                          </Text>
+                        </>
+                      ) : (
+                        <>
+                          <Text style={styles.businessName}>
+                            {transaction.receiver.name ||
+                              transaction.receiver.fullName}
+                          </Text>
+                          <Text style={styles.businessType}>
+                            {transaction.receiver.address}
+                          </Text>
+                          <Text style={styles.transactionTime}>
+                            {moment(transaction.dateTime).format("h:mm A")}
+                          </Text>
+                        </>
+                      )}
                     </View>
                   </View>
                   <View style={styles.transactionRight}>
