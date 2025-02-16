@@ -20,29 +20,29 @@ const OnBoarding = () => {
     {
       title: "Welcome to",
       subtitle: "FaceBouk",
-      description: "Your Face, Your Card ?",
-      //   image: require("../../assets/logo.png"), // Add Logo
+      description: "Your Face, Your Card ",
+      image: require("../../../assets/logo.png"), // Add Logo
       buttonText: "Get Started",
     },
     {
       title: "Secure Payments.",
       description:
         "Your security is our priority, with facial recognition technology and advanced encryption.",
-      //   image: require("../../assets/secure.png"), // Add  illustration
+        image: require("../../../assets/secured.png"), // Add  illustration
       buttonText: "Continue",
     },
     {
       title: "Anytime. Anywhere.",
       description:
         "Experience ultimate convenience with our payment system that works seamlessly wherever you are, at any time.",
-      //   image: require("../../assets/anywhere.png"), // Add illustration
+      image: require("../../../assets/anywhere.png"), // Add illustration
       buttonText: "Continue",
     },
     {
       title: "Manage Household Spending",
       description:
         "Stay in control with tools designed to track and manage expenses, making family budgeting simple and stress-free.",
-      //   image: require("../../assets/manage.png"), // Add  illustration
+      image: require("../../../assets/manage.png"), // Add  illustration
       buttonText: "Let's Go!",
     },
   ];
@@ -126,8 +126,8 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: 150,
+    height: 150,
     marginBottom: 20,
     backgroundColor: "#E9ECEF",
     borderRadius: 20,

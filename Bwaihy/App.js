@@ -30,8 +30,9 @@ export default function App() {
   };
 
   useEffect(() => {
-    checkToken();
-    // deleteToken();
+    // checkToken();
+    deleteToken();
+    
   }, []);
 
   const renderDashboard = () => {
