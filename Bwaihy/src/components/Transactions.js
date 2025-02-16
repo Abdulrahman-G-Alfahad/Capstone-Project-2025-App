@@ -23,6 +23,9 @@ import moment from "moment";
 import { getToken } from "../api/storage";
 import { jwtDecode } from "jwt-decode";
 import { getProfile } from "../api/auth";
+import { getAllUserTransactions } from "../api/transactions";
+import { useQuery } from "@tanstack/react-query";
+import { getBusinessProfile } from "../api/business";
 
 const TransactionIcon = ({ businessName }) => {
   const business = businesses.find(
@@ -81,6 +84,22 @@ const Transactions = () => {
   const [endDate, setEndDate] = useState(new Date());
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [isStartDate, setIsStartDate] = useState(true);
+  const [transactions, setTransactions] = useState([]);
+  const [businessProfileId, setBusinessProfileId] = useState(null);
+  const [businessName, setBusinessName] = useState("Coded Canteen");
+  const [businessAddress, setBusinessAddress] = useState("Free Trade Zone");
+
+  const fetchBusinessProfile = useQuery({
+    queryKey: ["businessProfile", businessProfileId],
+    queryFn: () => getBusinessProfile(businessProfileId),
+    enabled: !!businessProfileId, // Only run the query if businessProfile.id is available
+    onSuccess: (data) => {
+      console.log("Business profile data:", data);
+    },
+    onError: (error) => {
+      console.error("Error fetching business profile:", error);
+    },
+  });
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -96,6 +115,10 @@ const Transactions = () => {
           const profileData = await getProfile(userId);
           // console.log(profileData.user);
           setProfile(profileData.user);
+
+          const transactionsData = await getAllUserTransactions(userId);
+          console.log(transactionsData.transactions);
+          setTransactions(transactionsData.transactions);
         } else {
           throw new Error("No token found");
         }
@@ -154,7 +177,7 @@ const Transactions = () => {
   }
 
   const groupedTransactions = groupTransactionsByDate(
-    profile.transactionHistory
+    transactions
       .filter((transaction) => {
         // Apply date range filter
         const transactionDate = moment(transaction.dateTime).startOf("day");
@@ -169,11 +192,7 @@ const Transactions = () => {
 
         // Apply search filter
         const searchLower = searchQuery.toLowerCase();
-        const receiverName = (
-          transaction.receiver.name ||
-          transaction.receiver.fullName ||
-          ""
-        ).toLowerCase();
+        const receiverName = businessName.toLowerCase();
         const amount = transaction.amount.toString();
         const method = transaction.method.toLowerCase();
         const matchesSearch =
@@ -263,7 +282,7 @@ const Transactions = () => {
         {/* Transaction List */}
         <ScrollView style={styles.transactionList}>
           {groupedTransactions.map(([date, transactions]) => (
-            <View key={date} style={styles.dateGroup}>
+            <View key={date + Math.random()} style={styles.dateGroup}>
               <Text style={styles.dateHeader}>
                 {moment(date).isSame(moment(), "day")
                   ? "Today"
@@ -275,12 +294,7 @@ const Transactions = () => {
                   style={[styles.transactionItem, styles.transactionBorder]}
                 >
                   <View style={styles.transactionLeft}>
-                    <TransactionIcon
-                      businessName={
-                        transaction.receiver.name ||
-                        transaction.receiver.fullName
-                      }
-                    />
+                    <TransactionIcon businessName={transaction.receiver} />
                     <View style={styles.transactionInfo}>
                       {transaction.method === "DEPOSIT" ? (
                         <>
@@ -292,11 +306,10 @@ const Transactions = () => {
                       ) : (
                         <>
                           <Text style={styles.businessName}>
-                            {transaction.receiver.name ||
-                              transaction.receiver.fullName}
+                            {businessName}
                           </Text>
                           <Text style={styles.businessType}>
-                            {transaction.receiver.address}
+                            {businessAddress}
                           </Text>
                           <Text style={styles.transactionTime}>
                             {moment(transaction.dateTime).format("h:mm A")}

@@ -28,6 +28,9 @@ import { getFamily } from "../../api/family";
 import AddMoneyButton from "../../components/AddMoneyButton";
 import SendMoneyButton from "../../components/SendMoneyButton";
 import AddFamilyTies from "../../components/AddFamilyTies";
+import { getAllUserTransactions } from "../../api/transactions";
+import { useQuery } from "@tanstack/react-query";
+import { getBusinessProfile } from "../../api/business";
 
 const BusinessIcon = ({ businessName }) => {
   const business = businesses.find(
@@ -77,6 +80,10 @@ const Dashboard = () => {
   const [isBalanceHidden, setIsBalanceHidden] = useState(false);
   const [isFamilyTiesCollapsed, setIsFamilyTiesCollapsed] = useState(false);
   const [isTransactionsCollapsed, setIsTransactionsCollapsed] = useState(false);
+  const [transactions, setTransactions] = useState([]);
+  const [businessProfileId, setBusinessProfileId] = useState(null);
+  const [businessName, setBusinessName] = useState("Coded Canteen");
+  const [businessAddress, setBusinessAddress] = useState("Free Trade Zone");
 
   useFocusEffect(
     React.useCallback(() => {
@@ -91,6 +98,10 @@ const Dashboard = () => {
 
             const familyData = await getFamily(userId);
             setFamilyMembers(familyData.familyMembers);
+
+            const transactionsData = await getAllUserTransactions(userId);
+            console.log(transactionsData.transactions);
+            setTransactions(transactionsData.transactions);
           } else {
             throw new Error("No token found");
           }
@@ -107,6 +118,18 @@ const Dashboard = () => {
       }
     }, [user])
   );
+
+  const fetchBusinessProfile = useQuery({
+    queryKey: ["businessProfile", businessProfileId],
+    queryFn: () => getBusinessProfile(businessProfileId),
+    enabled: !!businessProfileId, // Only run the query if businessProfile.id is available
+    onSuccess: (data) => {
+      console.log("Business profile data:", data);
+    },
+    onError: (error) => {
+      console.error("Error fetching business profile:", error);
+    },
+  });
 
   const handleFamilyMemberAdded = (updatedFamilyMembers) => {
     setFamilyMembers(updatedFamilyMembers);
@@ -152,15 +175,14 @@ const Dashboard = () => {
     return (
       <View key={date + Math.random()}>
         {transactions.map((transaction) => (
+          // setBusinessProfileId(transaction.receiverId),
           <View
-            key={transaction.id}
+            key={transaction.i + " " + Math.random()}
             style={[styles.transactionItem, styles.transactionBorder]}
           >
             <View style={styles.transactionLeft}>
               <BusinessIcon
-                businessName={
-                  transaction.receiver.name || transaction.receiver.fullName
-                }
+                businessName={businessName || profile.fullName.split(" ")[0]}
               />
               <View style={styles.transactionInfo}>
                 {transaction.method === "DEPOSIT" ? (
@@ -172,13 +194,8 @@ const Dashboard = () => {
                   </>
                 ) : (
                   <>
-                    <Text style={styles.businessName}>
-                      {transaction.receiver.name ||
-                        transaction.receiver.fullName}
-                    </Text>
-                    <Text style={styles.businessType}>
-                      {transaction.receiver.address}
-                    </Text>
+                    <Text style={styles.businessName}>{businessName}</Text>
+                    <Text style={styles.businessType}>{businessAddress}</Text>
                     <Text style={styles.transactionTime}>
                       {moment(transaction.dateTime).format("h:mm A")}
                     </Text>
@@ -228,9 +245,7 @@ const Dashboard = () => {
     );
   }
 
-  const groupedTransactions = groupTransactionsByDate(
-    profile.transactionHistory
-  );
+  const groupedTransactions = groupTransactionsByDate(transactions);
   const limitedTransactions = Object.entries(groupedTransactions)
     .flatMap(([date, transactions]) => transactions.map((tx) => ({ date, tx })))
     .reverse() // Reverse the transactions to show the latest ones on top
@@ -405,7 +420,7 @@ const Dashboard = () => {
             </View>
             {!isTransactionsCollapsed && (
               <View style={styles.transactionsContainer}>
-                {profile && profile.transactionHistory.length > 0 ? (
+                {profile && transactions.length > 0 ? (
                   limitedTransactions.map(({ date, tx }) =>
                     renderTransactionSection(date, [tx])
                   )
