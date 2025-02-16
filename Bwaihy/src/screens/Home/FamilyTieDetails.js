@@ -142,7 +142,7 @@ const FamilyTieDetails = ({ route, navigation }) => {
           {/* Balance Information */}
           <View style={styles.balanceContainer}>
             <View style={styles.balanceItem}>
-              <Text style={styles.balanceLabel}>Remaining Balance</Text>
+              <Text style={styles.balanceLabel}>Spending Limit</Text>
               <Text style={styles.balanceValue}>KD {remainingBalance}</Text>
             </View>
           </View>
@@ -153,7 +153,7 @@ const FamilyTieDetails = ({ route, navigation }) => {
             onPress={handleSendMoney}
           >
             <Ionicons name="wallet-outline" size={24} color="#fff" />
-            <Text style={styles.sendMoneyText}>Set Deposit</Text>
+            <Text style={styles.sendMoneyText}>Set Limit</Text>
           </TouchableOpacity>
         </View>
 
@@ -273,8 +273,10 @@ const FamilyTieDetails = ({ route, navigation }) => {
               </TouchableOpacity>
 
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Set Deposit</Text>
-                <Text style={styles.modalSubtitle}>Set New Wallet Balance</Text>
+                <Text style={styles.modalTitle}>Set Limit</Text>
+                <Text style={styles.modalSubtitle}>
+                  Set New Spending Limit for {memberProfile.fullName}
+                </Text>
               </View>
 
               <View style={styles.modalContent}>
@@ -310,7 +312,7 @@ const FamilyTieDetails = ({ route, navigation }) => {
                       !isFormValid && styles.sendButtonTextDisabled,
                     ]}
                   >
-                    Send Money
+                    Done
                   </Text>
                 </TouchableOpacity>
               </View>

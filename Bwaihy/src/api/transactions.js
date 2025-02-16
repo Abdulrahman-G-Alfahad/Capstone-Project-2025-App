@@ -45,7 +45,7 @@ const getAllUserTransactions = async (id) => {
 const makeQRCodePayment = async (formdata) => {
   try {
     const res = await transactionApi.post("/transactions/qr-code", formdata);
-    console.log(res.data);
+    // console.log(res.data);
     return res.data;
   } catch (error) {
     throw error;

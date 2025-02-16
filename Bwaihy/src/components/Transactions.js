@@ -269,13 +269,14 @@ const Transactions = () => {
         {/* Transaction List */}
         <ScrollView style={styles.transactionList}>
           {groupedTransactions.map(([date, transactions]) => (
-            <View key={date + Math.random()} style={styles.dateGroup}>
+            <View key={`date-group-${date}`} style={styles.dateGroup}>
               <Text style={styles.dateHeader}>
                 {moment(date).isSame(moment(), "day")
                   ? "Today"
                   : moment(date).format("MMMM D, YYYY")}
               </Text>
               {transactions.map((transaction) => {
+                // console.log(transaction);
                 const receiverId = transaction.receiverId;
                 const isDeposit = receiverId === profile?.id;
 
@@ -302,7 +303,9 @@ const Transactions = () => {
 
                 return (
                   <View
-                    key={transaction.id}
+                    key={`transaction-${transaction.senderId}-${
+                      transaction.dateTime
+                    }-${transaction.amount}-${Math.random()}`}
                     style={[styles.transactionItem, styles.transactionBorder]}
                   >
                     <View style={styles.transactionLeft}>
