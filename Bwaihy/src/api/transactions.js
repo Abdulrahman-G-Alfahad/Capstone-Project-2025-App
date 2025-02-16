@@ -1,8 +1,10 @@
 import instance from ".";
+import transactionApi from "./transactionsApi";
 
 const getTransactionsBySender = async (id) => {
+  // console.log(id);
   try {
-    const res = await instance.get(`/transaction/sender/${id}`);
+    const res = await transactionApi.get(`/transactions/sender/${id}`);
     return res.data;
   } catch (error) {
     throw error;
@@ -11,7 +13,7 @@ const getTransactionsBySender = async (id) => {
 
 const getTransactionsByReceiver = async (id) => {
   try {
-    const res = await instance.get(`/transaction/receiver/${id}`);
+    const res = await transactionApi.get(`/transactions/receiver/${id}`);
     return res.data;
   } catch (error) {
     throw error;
@@ -19,13 +21,41 @@ const getTransactionsByReceiver = async (id) => {
 };
 
 const makeDeposit = async (id, amount) => {
-  console.log(id, amount);
+  // console.log(id, amount);
   try {
-    const res = await instance.post(`/transaction/deposit/${id}`, amount);
+    const res = await instance.post(`/personal/${id}/deposit`, amount);
+    // console.log(res);
     return res.data;
   } catch (error) {
     throw error;
   }
 };
 
-export { getTransactionsBySender, getTransactionsByReceiver, makeDeposit };
+const getAllUserTransactions = async (id) => {
+  // console.log(id);
+  try {
+    const res = await transactionApi.get(`/transactions/user/${id}`);
+    // console.log(res.data);
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const makeQRCodePayment = async (formdata) => {
+  try {
+    const res = await transactionApi.post("/transactions/qr-code", formdata);
+    // console.log(res.data);
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export {
+  getTransactionsBySender,
+  getTransactionsByReceiver,
+  makeDeposit,
+  getAllUserTransactions,
+  makeQRCodePayment,
+};

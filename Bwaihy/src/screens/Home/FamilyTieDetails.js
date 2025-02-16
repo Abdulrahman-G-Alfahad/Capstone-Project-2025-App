@@ -26,6 +26,8 @@ const FamilyTieDetails = ({ route, navigation }) => {
   const [isTransactionsCollapsed, setIsTransactionsCollapsed] = useState(false);
   const [amount, setAmount] = useState("");
   const [errors, setErrors] = useState({});
+  const [depTransactions, setDepTransactions] = useState([]);
+  const [businessProfiles, setBusinessProfiles] = useState({});
 
   const deleteMutation = useMutation({
     mutationFn: (memberId) => deleteFamily(profile.id, memberId),
@@ -40,6 +42,7 @@ const FamilyTieDetails = ({ route, navigation }) => {
   const setLimitMutation = useMutation({
     mutationFn: (limit) => setLimit(profile.id, limit, memberProfile.id),
     onSuccess: (data) => {
+      console.log("here: ", data);
       setMemberProfile(data.familyMember);
     },
     onError: (error) => {
@@ -83,9 +86,11 @@ const FamilyTieDetails = ({ route, navigation }) => {
     setErrors({});
   };
 
+  console.log(memberProfile);
+
   // console.log(memberProfile.transactions[0].receiver);
   // Transform businesses data into transactions format
-  const transactions = memberProfile.transactions.map((transaction) => ({
+  const transactions = depTransactions.map((transaction) => ({
     id: transaction.id,
     business: transaction.receiver.name,
     location: transaction.receiver.address,
@@ -173,32 +178,61 @@ const FamilyTieDetails = ({ route, navigation }) => {
               showsHorizontalScrollIndicator={false}
             >
               {transactions.length > 0 ? (
-                transactions.map(
-                  (transaction) => (
-                    console.log(transaction.receiver),
-                    (
-                      <View key={transaction.id} style={styles.transactionItem}>
-                        <View style={styles.transactionLeft}>
-                          <BusinessIcon businessName={transaction.receiver} />
-                          <View style={styles.transactionInfo}>
-                            <Text style={styles.businessName}>
-                              {transaction.business}
-                            </Text>
+                transactions.map((transaction) => {
+                  const receiverId = transaction.receiverId;
+                  const isDeposit = receiverId === profile?.id;
+
+                  // Only fetch if business profile not cached and not a deposit
+                  if (
+                    !isDeposit &&
+                    receiverId &&
+                    !businessProfiles[receiverId]
+                  ) {
+                    getBusinessProfile(receiverId).then((data) => {
+                      setBusinessProfiles((prev) => ({
+                        ...prev,
+                        [receiverId]: {
+                          name: data.businessEntity.name,
+                          address: data.businessEntity.address,
+                        },
+                      }));
+                    });
+                  }
+
+                  // Use cached business info or deposit info
+                  const transactionInfo = isDeposit
+                    ? { name: "Deposit", address: "" }
+                    : businessProfiles[receiverId] || {
+                        name: "Loading...",
+                        address: "",
+                      };
+
+                  return (
+                    <View key={transaction.id} style={styles.transactionItem}>
+                      <View style={styles.transactionLeft}>
+                        <BusinessIcon businessName={transactionInfo.name} />
+                        <View style={styles.transactionInfo}>
+                          <Text style={styles.businessName}>
+                            {transactionInfo.name}
+                          </Text>
+                          {!isDeposit && (
                             <Text style={styles.businessType}>
-                              {transaction.location}
+                              {transactionInfo.address}
                             </Text>
-                            <Text style={styles.transactionDate}>
-                              {moment(transaction.date).format("MMMM D, YYYY")}
-                            </Text>
-                          </View>
+                          )}
+                          <Text style={styles.transactionDate}>
+                            {moment(transaction.dateTime).format(
+                              "MMMM D, YYYY"
+                            )}
+                          </Text>
                         </View>
-                        <Text style={styles.transactionAmount}>
-                          {transaction.amount.toFixed(2)} KD
-                        </Text>
                       </View>
-                    )
-                  )
-                )
+                      <Text style={styles.transactionAmount}>
+                        {transaction.amount.toFixed(2)} KD
+                      </Text>
+                    </View>
+                  );
+                })
               ) : (
                 <View style={styles.emptyTransactionsContainer}>
                   <Ionicons name="receipt-outline" size={48} color="#A78BFA" />

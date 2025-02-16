@@ -23,6 +23,9 @@ import moment from "moment";
 import { getToken } from "../api/storage";
 import { jwtDecode } from "jwt-decode";
 import { getProfile } from "../api/auth";
+import { getAllUserTransactions } from "../api/transactions";
+import { useQuery } from "@tanstack/react-query";
+import { getBusinessProfile } from "../api/business";
 
 const TransactionIcon = ({ businessName }) => {
   const business = businesses.find(
@@ -81,6 +84,8 @@ const Transactions = () => {
   const [endDate, setEndDate] = useState(new Date());
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [isStartDate, setIsStartDate] = useState(true);
+  const [transactions, setTransactions] = useState([]);
+  const [businessProfiles, setBusinessProfiles] = useState({});
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -96,6 +101,10 @@ const Transactions = () => {
           const profileData = await getProfile(userId);
           // console.log(profileData.user);
           setProfile(profileData.user);
+
+          const transactionsData = await getAllUserTransactions(userId);
+          console.log(transactionsData.transactions);
+          setTransactions(transactionsData.transactions);
         } else {
           throw new Error("No token found");
         }
@@ -154,39 +163,36 @@ const Transactions = () => {
   }
 
   const groupedTransactions = groupTransactionsByDate(
-    profile.transactionHistory
-      .filter((transaction) => {
-        // Apply date range filter
-        const transactionDate = moment(transaction.dateTime).startOf("day");
-        const startDateMoment = moment(startDate).startOf("day");
-        const endDateMoment = moment(endDate).startOf("day");
-        const isWithinDateRange = transactionDate.isBetween(
-          startDateMoment,
-          endDateMoment,
-          "day",
-          "[]"
-        );
+    transactions.filter((transaction) => {
+      // Apply date range filter
+      const transactionDate = moment(transaction.dateTime).startOf("day");
+      const startDateMoment = moment(startDate).startOf("day");
+      const endDateMoment = moment(endDate).startOf("day");
+      const isWithinDateRange = transactionDate.isBetween(
+        startDateMoment,
+        endDateMoment,
+        "day",
+        "[]"
+      );
 
-        // Apply search filter
-        const searchLower = searchQuery.toLowerCase();
-        const receiverName = (
-          transaction.receiver.name ||
-          transaction.receiver.fullName ||
-          ""
-        ).toLowerCase();
-        const amount = transaction.amount.toString();
-        const method = transaction.method.toLowerCase();
-        const matchesSearch =
-          !searchQuery ||
-          receiverName.includes(searchLower) ||
-          amount.includes(searchLower) ||
-          method.includes(searchLower);
+      // Get business info for search
+      const isDeposit = transaction.receiverId === profile?.id;
+      const businessInfo = isDeposit
+        ? { name: "Deposit", address: "" }
+        : businessProfiles[transaction.receiverId] || { name: "", address: "" };
 
-        return isWithinDateRange && matchesSearch;
-      })
-      .reverse()
+      // Apply search filter
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch =
+        !searchQuery ||
+        businessInfo.name.toLowerCase().includes(searchLower) ||
+        (businessInfo.address || "").toLowerCase().includes(searchLower) ||
+        transaction.amount.toString().includes(searchLower) ||
+        transaction.method.toLowerCase().includes(searchLower);
+
+      return isWithinDateRange && matchesSearch;
+    })
   );
-  console.log(groupedTransactions);
 
   return (
     <View style={styles.container}>
@@ -263,55 +269,71 @@ const Transactions = () => {
         {/* Transaction List */}
         <ScrollView style={styles.transactionList}>
           {groupedTransactions.map(([date, transactions]) => (
-            <View key={date} style={styles.dateGroup}>
+            <View key={`date-group-${date}`} style={styles.dateGroup}>
               <Text style={styles.dateHeader}>
                 {moment(date).isSame(moment(), "day")
                   ? "Today"
                   : moment(date).format("MMMM D, YYYY")}
               </Text>
-              {transactions.map((transaction) => (
-                <View
-                  key={transaction.id}
-                  style={[styles.transactionItem, styles.transactionBorder]}
-                >
-                  <View style={styles.transactionLeft}>
-                    <TransactionIcon
-                      businessName={
-                        transaction.receiver.name ||
-                        transaction.receiver.fullName
-                      }
-                    />
-                    <View style={styles.transactionInfo}>
-                      {transaction.method === "DEPOSIT" ? (
-                        <>
-                          <Text style={styles.businessName}>Deposit</Text>
-                          <Text style={styles.transactionTime}>
-                            {moment(transaction.dateTime).format("YYYY-MM-DD")}
-                          </Text>
-                        </>
-                      ) : (
-                        <>
-                          <Text style={styles.businessName}>
-                            {transaction.receiver.name ||
-                              transaction.receiver.fullName}
-                          </Text>
+              {transactions.map((transaction) => {
+                // console.log(transaction);
+                const receiverId = transaction.receiverId;
+                const isDeposit = receiverId === profile?.id;
+
+                // Only fetch if business profile not cached and not a deposit
+                if (!isDeposit && !businessProfiles[receiverId]) {
+                  getBusinessProfile(receiverId).then((data) => {
+                    setBusinessProfiles((prev) => ({
+                      ...prev,
+                      [receiverId]: {
+                        name: data.businessEntity.name,
+                        address: data.businessEntity.address,
+                      },
+                    }));
+                  });
+                }
+
+                // Use cached business info or deposit info
+                const transactionInfo = isDeposit
+                  ? { name: "Deposit", address: "" }
+                  : businessProfiles[receiverId] || {
+                      name: "Loading...",
+                      address: "",
+                    };
+
+                return (
+                  <View
+                    key={`transaction-${transaction.senderId}-${
+                      transaction.dateTime
+                    }-${transaction.amount}-${Math.random()}`}
+                    style={[styles.transactionItem, styles.transactionBorder]}
+                  >
+                    <View style={styles.transactionLeft}>
+                      <TransactionIcon businessName={transactionInfo.name} />
+                      <View style={styles.transactionInfo}>
+                        <Text style={styles.businessName}>
+                          {transactionInfo.name}
+                        </Text>
+                        {!isDeposit && (
                           <Text style={styles.businessType}>
-                            {transaction.receiver.address}
+                            {transactionInfo.address}
                           </Text>
-                          <Text style={styles.transactionTime}>
-                            {moment(transaction.dateTime).format("h:mm A")}
-                          </Text>
-                        </>
-                      )}
+                        )}
+                        <Text style={styles.transactionTime}>
+                          {moment(transaction.dateTime).format(
+                            isDeposit ? "YYYY-MM-DD" : "h:mm A"
+                          )}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.transactionRight}>
+                      <Text style={styles.transactionAmount}>
+                        KD {transaction.amount}
+                      </Text>
                     </View>
                   </View>
-                  <View style={styles.transactionRight}>
-                    <Text style={styles.transactionAmount}>
-                      KD {transaction.amount}
-                    </Text>
-                  </View>
-                </View>
-              ))}
+                );
+              })}
             </View>
           ))}
         </ScrollView>

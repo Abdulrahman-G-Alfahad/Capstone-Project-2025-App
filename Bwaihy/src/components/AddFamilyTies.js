@@ -20,7 +20,6 @@ const AddFamilyTies = ({
   onFamilyMemberAdded,
 }) => {
   const [fullName, setFullName] = useState("");
-  const [walletBalance, setWalletBalance] = useState("");
   const [faceId, setFaceId] = useState("");
   const [errors, setErrors] = useState({});
   const [showFaceID, setShowFaceID] = useState(false);
@@ -30,20 +29,17 @@ const AddFamilyTies = ({
     if (!fullName.trim()) {
       newErrors.fullName = "Full name is required";
     }
-    if (!walletBalance.trim()) {
-      newErrors.walletBalance = "Wallet balance is required";
-    } else if (isNaN(walletBalance) || Number(walletBalance) < 0) {
-      newErrors.walletBalance = "Please enter a valid amount";
-    }
     if (!faceId.trim()) {
       newErrors.faceId = "Face ID is required";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [fullName, walletBalance, faceId]);
+  }, [fullName, faceId]);
 
-  const isFormValid = fullName.trim() && walletBalance.trim() && faceId.trim();
+  const isFormValid = fullName.trim() && faceId.trim();
+  console.log(fullName, faceId);
+  console.log(isFormValid);
 
   const handleAddFamilyMember = async () => {
     try {
@@ -54,13 +50,13 @@ const AddFamilyTies = ({
       const token = await getToken();
       const decodedToken = jwtDecode(token);
       const userId = decodedToken.userId;
-      const familyInfo = { fullName, walletBalance, faceId };
+      const familyInfo = { fullName, faceId };
+      console.log(fullName, faceId);
       await addFamily(userId, familyInfo);
       const familyData = await getFamily(userId);
       onFamilyMemberAdded(familyData.familyMembers);
       setModalVisible(false);
       setFullName("");
-      setWalletBalance("");
       setFaceId("");
       setErrors({});
     } catch (error) {

@@ -1,6 +1,8 @@
 import instance from ".";
 
 const addFamily = async (id, familyInfo) => {
+  // console.log(first)
+  console.log(id);
   try {
     const res = await instance.post(
       `/personal/addFamilyMember/${id}`,
