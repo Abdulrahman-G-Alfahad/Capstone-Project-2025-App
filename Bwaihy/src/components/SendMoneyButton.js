@@ -128,7 +128,7 @@ const SendMoneyButton = () => {
           size={24}
           color="#E8F0FE"
         />
-        <Text style={styles.actionButtonText}>Set Deposit</Text>
+        <Text style={styles.actionButtonText}>Set Limit</Text>
       </TouchableOpacity>
 
       <Modal
@@ -144,7 +144,7 @@ const SendMoneyButton = () => {
             </TouchableOpacity>
 
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Set Deposit</Text>
+              <Text style={styles.modalTitle}>Set Limit</Text>
             </View>
 
             <View style={styles.modalContent}>
@@ -250,7 +250,7 @@ const SendMoneyButton = () => {
                     !isFormValid && styles.modalButtonTextDisabled,
                   ]}
                 >
-                  Send
+                  Done
                 </Text>
               </TouchableOpacity>
 
