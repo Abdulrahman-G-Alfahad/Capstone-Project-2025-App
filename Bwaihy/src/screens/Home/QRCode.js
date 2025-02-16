@@ -17,6 +17,8 @@ import { Ionicons } from "@expo/vector-icons";
 import * as FileSystem from "expo-file-system";
 import { useNavigation } from "@react-navigation/native";
 import AccountContext from "../../context/AccountContext";
+import { useMutation } from "@tanstack/react-query";
+import { makeQRCodePayment } from "../../api/transactions";
 
 const QRCodeScreen = () => {
   const navigation = useNavigation();
@@ -35,6 +37,12 @@ const QRCodeScreen = () => {
       alert("User ID not found. Please try logging in again.");
       return;
     }
+
+    const formdata = {
+      amount: parseFloat(amount),
+      senderId: userId,
+    };
+    startQRCodeRequest.mutate(formdata);
     // Generate QR code value with both amount and user ID
     const value = JSON.stringify({
       type: "PAYMENT",
@@ -44,6 +52,29 @@ const QRCodeScreen = () => {
     });
     setQRValue(value);
   };
+
+  const startQRCodeRequest = useMutation({
+    mutationKey: "qr-code",
+    onMutate: async (formdata) => {
+      // console.log(formdata);
+      try {
+        const res = await makeQRCodePayment(formdata);
+        return res;
+      } catch (error) {
+        throw error;
+      }
+    },
+    onError: (error) => {
+      // alert("Error making payment: " + error.message);
+    },
+    onSuccess: (data) => {
+      if (data) {
+        alert("Payment successful!");
+        setAmount("");
+        setQRValue("");
+      }
+    },
+  });
 
   const handleShare = async () => {
     if (!qrRef.current) return;

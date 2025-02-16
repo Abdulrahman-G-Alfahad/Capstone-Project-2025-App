@@ -81,9 +81,7 @@ const Dashboard = () => {
   const [isFamilyTiesCollapsed, setIsFamilyTiesCollapsed] = useState(false);
   const [isTransactionsCollapsed, setIsTransactionsCollapsed] = useState(false);
   const [transactions, setTransactions] = useState([]);
-  const [businessProfileId, setBusinessProfileId] = useState(null);
-  const [businessName, setBusinessName] = useState("Coded Canteen");
-  const [businessAddress, setBusinessAddress] = useState("Free Trade Zone");
+  const [businessProfiles, setBusinessProfiles] = useState({}); // Add this state
 
   useFocusEffect(
     React.useCallback(() => {
@@ -118,18 +116,6 @@ const Dashboard = () => {
       }
     }, [user])
   );
-
-  const fetchBusinessProfile = useQuery({
-    queryKey: ["businessProfile", businessProfileId],
-    queryFn: () => getBusinessProfile(businessProfileId),
-    enabled: !!businessProfileId, // Only run the query if businessProfile.id is available
-    onSuccess: (data) => {
-      console.log("Business profile data:", data);
-    },
-    onError: (error) => {
-      console.error("Error fetching business profile:", error);
-    },
-  });
 
   const handleFamilyMemberAdded = (updatedFamilyMembers) => {
     setFamilyMembers(updatedFamilyMembers);
@@ -174,42 +160,64 @@ const Dashboard = () => {
   const renderTransactionSection = (date, transactions) => {
     return (
       <View key={date + Math.random()}>
-        {transactions.map((transaction) => (
-          // setBusinessProfileId(transaction.receiverId),
-          <View
-            key={transaction.i + " " + Math.random()}
-            style={[styles.transactionItem, styles.transactionBorder]}
-          >
-            <View style={styles.transactionLeft}>
-              <BusinessIcon
-                businessName={businessName || profile.fullName.split(" ")[0]}
-              />
-              <View style={styles.transactionInfo}>
-                {transaction.method === "DEPOSIT" ? (
-                  <>
-                    <Text style={styles.businessName}>Deposit</Text>
-                    <Text style={styles.transactionTime}>
-                      {moment(transaction.dateTime).format("YYYY-MM-DD")}
+        {transactions.map((transaction) => {
+          // console.log(transaction.receiverId, profile?.id);
+          const receiverId = transaction.receiverId;
+          const isDeposit = receiverId === profile?.id;
+
+          // Only fetch for non-deposits and if not already cached
+          if (!isDeposit && receiverId && !businessProfiles[receiverId]) {
+            getBusinessProfile(receiverId).then((data) => {
+              console.log(data);
+              setBusinessProfiles((prev) => ({
+                ...prev,
+                [receiverId]: {
+                  name: data.businessEntity.name,
+                  address: data.businessEntity.address,
+                },
+              }));
+            });
+          }
+
+          // For deposits, use deposit info directly instead of businessProfiles
+          const transactionInfo = isDeposit
+            ? { name: "Deposit", address: "" }
+            : businessProfiles[receiverId] || {
+                name: "Loading...",
+                address: "",
+              };
+
+          return (
+            <View
+              key={transaction.id + Math.random()}
+              style={[styles.transactionItem, styles.transactionBorder]}
+            >
+              <View style={styles.transactionLeft}>
+                <BusinessIcon businessName={transactionInfo.name} />
+                <View style={styles.transactionInfo}>
+                  <Text style={styles.businessName}>
+                    {transactionInfo.name}
+                  </Text>
+                  {!isDeposit && (
+                    <Text style={styles.businessType}>
+                      {transactionInfo.address}
                     </Text>
-                  </>
-                ) : (
-                  <>
-                    <Text style={styles.businessName}>{businessName}</Text>
-                    <Text style={styles.businessType}>{businessAddress}</Text>
-                    <Text style={styles.transactionTime}>
-                      {moment(transaction.dateTime).format("h:mm A")}
-                    </Text>
-                  </>
-                )}
+                  )}
+                  <Text style={styles.transactionTime}>
+                    {moment(transaction.dateTime).format(
+                      isDeposit ? "YYYY-MM-DD" : "h:mm A"
+                    )}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.transactionRight}>
+                <Text style={styles.transactionAmount}>
+                  KD {transaction.amount}
+                </Text>
               </View>
             </View>
-            <View style={styles.transactionRight}>
-              <Text style={styles.transactionAmount}>
-                KD {transaction.amount}
-              </Text>
-            </View>
-          </View>
-        ))}
+          );
+        })}
       </View>
     );
   };
