@@ -32,7 +32,6 @@ export default function App() {
   useEffect(() => {
     checkToken();
     // deleteToken();
-    
   }, []);
 
   const renderDashboard = () => {
