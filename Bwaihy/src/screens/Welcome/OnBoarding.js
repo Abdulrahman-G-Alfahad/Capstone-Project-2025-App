@@ -20,29 +20,29 @@ const OnBoarding = () => {
     {
       title: "Welcome to",
       subtitle: "FaceBouk",
-      description: "Your Face, Your Card ",
-      image: require("../../../assets/logo.png"), // Add Logo
+      description: "No Cards, No Cash—Just You. ",
+      image: require("../../../assets/logo2.png"), // Logo
       buttonText: "Get Started",
     },
     {
       title: "Secure Payments.",
       description:
         "Your security is our priority, with facial recognition technology and advanced encryption.",
-        image: require("../../../assets/secured.png"), // Add  illustration
+        image: require("../../../assets/secured.png"), //illustration 1
       buttonText: "Continue",
     },
     {
       title: "Anytime. Anywhere.",
       description:
         "Experience ultimate convenience with our payment system that works seamlessly wherever you are, at any time.",
-      image: require("../../../assets/anywhere.png"), // Add illustration
+      image: require("../../../assets/anywhere.png"), //illustration 2
       buttonText: "Continue",
     },
     {
       title: "Manage Household Spending",
       description:
         "Stay in control with tools designed to track and manage expenses, making family budgeting simple and stress-free.",
-      image: require("../../../assets/manage.png"), // Add  illustration
+      image: require("../../../assets/manage.png"), //illustration 3
       buttonText: "Let's Go!",
     },
   ];

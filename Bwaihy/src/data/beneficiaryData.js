@@ -17,7 +17,7 @@ export const beneficiaryData = [
     id: "3",
     name: "Saja Bin Ali",
     avatar: "https://randomuser.me/api/portraits/women/3.jpg",
-    relationship: "Sister",
+    // relationship: "Sister",
     dateAdded: "2024-03-15",
   },
   {

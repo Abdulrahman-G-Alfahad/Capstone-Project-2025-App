@@ -206,17 +206,6 @@ const QRCodeScreen = () => {
                         />
                         <Text style={styles.buttonText}>Share Code</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.actionButton, styles.copyButton]}
-                        onPress={copyToClipboard}
-                      >
-                        <Ionicons
-                          name="copy-outline"
-                          size={24}
-                          color="#E8F0FE"
-                        />
-                        <Text style={styles.buttonText}>Copy Value</Text>
-                      </TouchableOpacity>
                     </View>
                   </View>
                 ) : null}
@@ -383,13 +372,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   actionButtons: {
-    flexDirection: "row",
-    gap: 12,
     width: "100%",
   },
   actionButton: {
-    flex: 1,
-    backgroundColor: "#A78BFA",
+    backgroundColor: "#0D9488",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -405,9 +391,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
-  },
-  copyButton: {
-    backgroundColor: "#0D9488",
   },
   buttonText: {
     color: "#E8F0FE",
