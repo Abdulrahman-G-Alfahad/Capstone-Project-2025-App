@@ -25,13 +25,27 @@ import { jwtDecode } from "jwt-decode";
 import { getProfile } from "../api/auth";
 
 const TransactionIcon = ({ businessName }) => {
-  const business = businesses.find(
-    (b) => b.name === businessName || b.id == 4
-  ) || {
-    icon: "help-circle",
-    colors: { background: "#9E9E9E", icon: "#fff" },
-    iconSet: MaterialCommunityIcons,
+  const depositBusiness = {
+    name: "Deposit",
+    icon: "arrow-up-circle",
+    iconSet: "Ionicons",
+    colors: {
+      background: "#DCFCE7",
+      icon: "#16A34A",
+    },
   };
+
+  const defaultBusiness = {
+    icon: "alert-circle",
+    colors: { background: "#2A2E3B", icon: "#9CA3AF" },
+    iconSet: "Ionicons",
+  };
+
+  const isDeposit = businessName === "Deposit";
+  const business = isDeposit
+    ? depositBusiness
+    : businesses.find((b) => b.name === businessName) || defaultBusiness;
+    
 
   const IconComponent = {
     MaterialCommunityIcons,
@@ -39,16 +53,21 @@ const TransactionIcon = ({ businessName }) => {
     Ionicons,
   }[business.iconSet];
 
+  const iconStyle = {
+    width: 50,
+    height: 50,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+    backgroundColor: business.colors.background,
+  };
+
   return (
-    <View
-      style={[
-        styles.transactionIcon,
-        { backgroundColor: business.colors.background },
-      ]}
-    >
+    <View style={iconStyle}>
       <IconComponent
         name={business.icon}
-        size={20}
+        size={28}
         color={business.colors.icon}
       />
     </View>
@@ -275,10 +294,13 @@ const Transactions = () => {
                   style={[styles.transactionItem, styles.transactionBorder]}
                 >
                   <View style={styles.transactionLeft}>
+                    {console.log("Transaction method:", transaction.method)}
                     <TransactionIcon
                       businessName={
-                        transaction.receiver.name ||
-                        transaction.receiver.fullName
+                        transaction.method === "DEPOSIT"
+                          ? "Deposit"
+                          : transaction.receiver.name ||
+                            transaction.receiver.fullName
                       }
                     />
                     <View style={styles.transactionInfo}>
@@ -584,8 +606,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
-    borderWidth: 1,
-    borderColor: "rgba(167, 139, 250, 0.2)",
   },
   transactionInfo: {
     flex: 1,

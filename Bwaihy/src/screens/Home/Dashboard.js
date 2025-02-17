@@ -30,13 +30,26 @@ import SendMoneyButton from "../../components/SendMoneyButton";
 import AddFamilyTies from "../../components/AddFamilyTies";
 
 const BusinessIcon = ({ businessName }) => {
-  const business = businesses.find(
-    (b) => b.name === businessName || b.id === 4
-  ) || {
-    icon: "help-circle",
-    colors: { background: "#9E9E9E", icon: "#fff" },
-    iconSet: MaterialCommunityIcons,
+  const depositBusiness = {
+    name: "Deposit",
+    icon: "arrow-up-circle",
+    iconSet: "Ionicons",
+    colors: {
+      background: "#DCFCE7",
+      icon: "#16A34A",
+    },
   };
+
+  const defaultBusiness = {
+    icon: "alert-circle",
+    colors: { background: "#2A2E3B", icon: "#9CA3AF" },
+    iconSet: "Ionicons",
+  };
+
+  const isDeposit = businessName === "Deposit";
+  const business = isDeposit
+    ? depositBusiness
+    : businesses.find((b) => b.name === businessName) || defaultBusiness;
 
   const IconComponent = {
     MaterialCommunityIcons,
@@ -205,9 +218,9 @@ const Dashboard = () => {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 17) return "Good afternoon";
-    return "Good evening";
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    return "Good Evening";
   };
 
   if (isLoading) {
@@ -246,12 +259,21 @@ const Dashboard = () => {
               <Text style={styles.logoBold}>F</Text>
               ace<Text style={styles.logoBold}>B</Text>ouk
             </Text>
-            <TouchableOpacity
-              style={styles.profileIcon}
-              onPress={() => navigation.navigate("Profile")}
-            >
-              <Ionicons name="person" size={20} color="#A78BFA" />
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              {/* the new QR code icon */}
+              {/* <TouchableOpacity
+                style={styles.headerIconButton}
+                onPress={() => navigation.navigate("QRCode")}
+              >
+                <Ionicons name="qr-code-outline" size={20} color="#A78BFA" />
+              </TouchableOpacity> */}
+              <TouchableOpacity
+                style={styles.profileIcon}
+                onPress={() => navigation.navigate("Profile")}
+              >
+                <Ionicons name="person" size={20} color="#A78BFA" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -440,6 +462,8 @@ const Dashboard = () => {
               <Text style={styles.quickActionText}>Generate QR</Text>
               <Text style={styles.quickActionSubText}>Pay via QR code</Text>
             </TouchableOpacity>
+
+            {/* Promotions */}
             <TouchableOpacity
               style={styles.quickActionButton}
               onPress={() => navigation.navigate("Promotions")}
@@ -787,6 +811,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(167, 139, 250, 0.2)",
   },
+  qrButton: {
+    backgroundColor: "#6C63FF",
+    borderColor: "#6C63FF",
+  },
   addButton: {
     backgroundColor: "#A78BFA",
   },
@@ -887,6 +915,30 @@ const styles = StyleSheet.create({
   },
   collapseButton: {
     padding: 4,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  headerIconButton: {
+    padding: 6,
+    backgroundColor: "rgba(167, 139, 250, 0.08)",
+    borderRadius: 50,
+    width: 36,
+    height: 36,
+    borderWidth: 1.5,
+    borderColor: "#A78BFA",
+    shadowColor: "#A78BFA",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 
