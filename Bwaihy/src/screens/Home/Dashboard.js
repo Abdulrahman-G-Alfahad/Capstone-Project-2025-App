@@ -28,6 +28,9 @@ import { getFamily } from "../../api/family";
 import AddMoneyButton from "../../components/AddMoneyButton";
 import SendMoneyButton from "../../components/SendMoneyButton";
 import AddFamilyTies from "../../components/AddFamilyTies";
+import { getAllUserTransactions } from "../../api/transactions";
+import { useQuery } from "@tanstack/react-query";
+import { getBusinessProfile } from "../../api/business";
 
 const BusinessIcon = ({ businessName }) => {
   const depositBusiness = {
@@ -90,6 +93,8 @@ const Dashboard = () => {
   const [isBalanceHidden, setIsBalanceHidden] = useState(false);
   const [isFamilyTiesCollapsed, setIsFamilyTiesCollapsed] = useState(false);
   const [isTransactionsCollapsed, setIsTransactionsCollapsed] = useState(false);
+  const [transactions, setTransactions] = useState([]);
+  const [businessProfiles, setBusinessProfiles] = useState({}); // Add this state
 
   useFocusEffect(
     React.useCallback(() => {
@@ -104,6 +109,10 @@ const Dashboard = () => {
 
             const familyData = await getFamily(userId);
             setFamilyMembers(familyData.familyMembers);
+
+            const transactionsData = await getAllUserTransactions(userId);
+            console.log(transactionsData.transactions);
+            setTransactions(transactionsData.transactions);
           } else {
             throw new Error("No token found");
           }
@@ -164,48 +173,64 @@ const Dashboard = () => {
   const renderTransactionSection = (date, transactions) => {
     return (
       <View key={date + Math.random()}>
-        {transactions.map((transaction) => (
-          <View
-            key={transaction.id}
-            style={[styles.transactionItem, styles.transactionBorder]}
-          >
-            <View style={styles.transactionLeft}>
-              <BusinessIcon
-                businessName={
-                  transaction.receiver.name || transaction.receiver.fullName
-                }
-              />
-              <View style={styles.transactionInfo}>
-                {transaction.method === "DEPOSIT" ? (
-                  <>
-                    <Text style={styles.businessName}>Deposit</Text>
-                    <Text style={styles.transactionTime}>
-                      {moment(transaction.dateTime).format("YYYY-MM-DD")}
-                    </Text>
-                  </>
-                ) : (
-                  <>
-                    <Text style={styles.businessName}>
-                      {transaction.receiver.name ||
-                        transaction.receiver.fullName}
-                    </Text>
+        {transactions.map((transaction) => {
+          // console.log(transaction.receiverId, profile?.id);
+          const receiverId = transaction.receiverId;
+          const isDeposit = receiverId === profile?.id;
+
+          // Only fetch for non-deposits and if not already cached
+          if (!isDeposit && receiverId && !businessProfiles[receiverId]) {
+            getBusinessProfile(receiverId).then((data) => {
+              console.log(data);
+              setBusinessProfiles((prev) => ({
+                ...prev,
+                [receiverId]: {
+                  name: data.businessEntity.name,
+                  address: data.businessEntity.address,
+                },
+              }));
+            });
+          }
+
+          // For deposits, use deposit info directly instead of businessProfiles
+          const transactionInfo = isDeposit
+            ? { name: "Deposit", address: "" }
+            : businessProfiles[receiverId] || {
+                name: "Loading...",
+                address: "",
+              };
+
+          return (
+            <View
+              key={transaction.id + Math.random()}
+              style={[styles.transactionItem, styles.transactionBorder]}
+            >
+              <View style={styles.transactionLeft}>
+                <BusinessIcon businessName={transactionInfo.name} />
+                <View style={styles.transactionInfo}>
+                  <Text style={styles.businessName}>
+                    {transactionInfo.name}
+                  </Text>
+                  {!isDeposit && (
                     <Text style={styles.businessType}>
-                      {transaction.receiver.address}
+                      {transactionInfo.address}
                     </Text>
-                    <Text style={styles.transactionTime}>
-                      {moment(transaction.dateTime).format("h:mm A")}
-                    </Text>
-                  </>
-                )}
+                  )}
+                  <Text style={styles.transactionTime}>
+                    {moment(transaction.dateTime).format(
+                      isDeposit ? "YYYY-MM-DD" : "h:mm A"
+                    )}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.transactionRight}>
+                <Text style={styles.transactionAmount}>
+                  KD {transaction.amount}
+                </Text>
               </View>
             </View>
-            <View style={styles.transactionRight}>
-              <Text style={styles.transactionAmount}>
-                KD {transaction.amount}
-              </Text>
-            </View>
-          </View>
-        ))}
+          );
+        })}
       </View>
     );
   };
@@ -241,9 +266,7 @@ const Dashboard = () => {
     );
   }
 
-  const groupedTransactions = groupTransactionsByDate(
-    profile.transactionHistory
-  );
+  const groupedTransactions = groupTransactionsByDate(transactions);
   const limitedTransactions = Object.entries(groupedTransactions)
     .flatMap(([date, transactions]) => transactions.map((tx) => ({ date, tx })))
     .reverse() // Reverse the transactions to show the latest ones on top
@@ -427,7 +450,7 @@ const Dashboard = () => {
             </View>
             {!isTransactionsCollapsed && (
               <View style={styles.transactionsContainer}>
-                {profile && profile.transactionHistory.length > 0 ? (
+                {profile && transactions.length > 0 ? (
                   limitedTransactions.map(({ date, tx }) =>
                     renderTransactionSection(date, [tx])
                   )
