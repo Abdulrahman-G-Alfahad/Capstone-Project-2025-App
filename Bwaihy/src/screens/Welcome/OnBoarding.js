@@ -21,7 +21,7 @@ const OnBoarding = () => {
       title: "Welcome to",
       subtitle: "FaceBouk",
       description: "No Cards, No Cash—Just You. ",
-      image: require("../../../assets/logo2.png"), // Logo
+      image: require("../../../assets/logo3.png"), // Logo
       buttonText: "Get Started",
     },
     {
