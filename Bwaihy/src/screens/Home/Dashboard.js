@@ -266,11 +266,14 @@ const Dashboard = () => {
     );
   }
 
-  const groupedTransactions = groupTransactionsByDate(transactions);
+  const groupedTransactions = groupTransactionsByDate(
+    transactions.filter((transaction) => transaction.receiverId !== null)
+  );
+
   const limitedTransactions = Object.entries(groupedTransactions)
     .flatMap(([date, transactions]) => transactions.map((tx) => ({ date, tx })))
-    .reverse() // Reverse the transactions to show the latest ones on top
-    .slice(0, 3); // Limit to the latest 3 transactions
+    .reverse()
+    .slice(0, 3);
 
   return (
     <SafeAreaView style={styles.safeArea}>

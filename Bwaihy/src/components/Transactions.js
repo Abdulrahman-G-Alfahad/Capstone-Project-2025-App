@@ -182,7 +182,10 @@ const Transactions = () => {
 
   const groupedTransactions = groupTransactionsByDate(
     transactions.filter((transaction) => {
-      // Apply date range filter
+      // First filter out null receiverId transactions
+      if (transaction.receiverId === null) return false;
+
+      // Then apply existing filters
       const transactionDate = moment(transaction.dateTime).startOf("day");
       const startDateMoment = moment(startDate).startOf("day");
       const endDateMoment = moment(endDate).startOf("day");
