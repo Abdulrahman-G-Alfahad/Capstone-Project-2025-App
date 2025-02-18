@@ -3,7 +3,7 @@ import { id } from "date-fns/locale";
 const businesses = [
   {
     id: 1,
-    name: "Alfa",
+    name: "gas station",
     type: "Petrol Station",
     icon: "gas-station",
     iconSet: "MaterialCommunityIcons",
@@ -14,7 +14,7 @@ const businesses = [
   },
   {
     id: 2,
-    name: "business",
+    name: "Alfa",
     type: "Convenience Store",
     icon: "shopping-cart",
     iconSet: "FontAwesome",
@@ -25,7 +25,7 @@ const businesses = [
   },
   {
     id: 3,
-    name: "Mishref Co-op",
+    name: "Coded Canteen",
     type: "Grocery Store",
     icon: "shopping-basket",
     iconSet: "FontAwesome",
